@@ -51,7 +51,6 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 	protected static IncomingHandler m_inhandler;
 	
 	private ServiceConnection m_serviceConnection;
-
 	/*
 	private boolean isMyServiceRunning(Class<?> serviceClass) {
 	    ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
