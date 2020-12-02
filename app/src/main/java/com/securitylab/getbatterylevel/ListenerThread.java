@@ -90,6 +90,7 @@ public class ListenerThread extends Thread {
 		Log.d(Constants.TAG, "Starting Thread....");
 		createOutputFile();
 		startListening();
+		//comment
 		while (m_execute) {
 			try {
 				Thread.sleep(THREAD_SLEEP_TIME);
