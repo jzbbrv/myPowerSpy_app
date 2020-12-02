@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">MyPowerSpy</string>
+    <string name="notification_title">MyPowerSpy is recording &#8230;</string>
+    <string name="notification_text">Tap to open MyPowerSpy</string>
+    <string name="notification_channel_name">notification channel</string>
+    <string name="notification_channel_description">notification channel for BackgroundRecorder service</string>
+    <string name="notification_id">notification</string>
+    <string name="permission_granted">Permission granted.</string>
+    <string name="permission_explanation">"For this app to work, it must access your location. Please grant the corresponding permission when launching MyPowerSpy the next time. In case Android stops asking for permission, change the apps permissions in the phone's system settings."</string>
+</resources>

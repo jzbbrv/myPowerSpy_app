@@ -1,0 +1,120 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Main" >
+
+    <TextView
+        android:id="@+id/batterycharge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/comment"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="50dp"
+        android:layout_marginLeft="50dp"
+        android:layout_marginTop="25dp"
+        android:layout_marginBottom="0dp" />
+
+    <Switch
+        android:id="@+id/start_stop_switch"
+        android:layout_width="300dp"
+        android:layout_height="17dp"
+        android:layout_below="@+id/textView"
+        android:layout_alignStart="@+id/textView"
+        android:layout_alignEnd="@+id/explainBatteryMode"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="25dp"
+        android:layout_marginEnd="-65dp"
+        android:layout_marginRight="0dp"
+        android:text="Record data" />
+
+    <CheckBox
+        android:id="@+id/gpsCheckBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/start_stop_switch"
+        android:layout_alignLeft="@+id/batterycharge"
+        android:layout_marginLeft="0dp"
+        android:layout_marginTop="10dp"
+        android:checked="true"
+        android:enabled="true"
+        android:text="GPS mode" />
+
+    <CheckBox
+        android:id="@+id/signalCheckBox"
+        android:layout_width="198dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/explainGPSmode"
+        android:layout_alignLeft="@+id/batterycharge"
+        android:layout_marginLeft="0dp"
+        android:layout_marginTop="10dp"
+        android:checked="true"
+        android:text="Battery + network mode" />
+
+    <EditText
+        android:id="@+id/comment"
+        android:layout_width="310dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/commentTextView"
+        android:layout_alignLeft="@+id/commentTextView"
+        android:layout_alignEnd="@+id/start_stop_switch"
+        android:layout_marginLeft="0dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="0dp"
+        android:ems="10"
+        android:inputType="text">
+
+        <requestFocus />
+    </EditText>
+
+    <TextView
+        android:id="@+id/commentTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/explainBatteryMode"
+        android:layout_alignLeft="@+id/batterycharge"
+        android:layout_marginLeft="0dp"
+        android:layout_marginTop="10dp"
+        android:text="comment" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="306dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="50dp"
+        android:layout_marginTop="50dp"
+        android:layout_marginEnd="60dp"
+        android:text="My PowerSpy"
+        android:textColor="#000000"
+        android:textSize="25sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/explainBatteryMode"
+        android:layout_width="287dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/signalCheckBox"
+        android:layout_alignEnd="@+id/explainGPSmode"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="60dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="0dp"
+        android:text="This mode log the phone's battery consumption and connected cell tower every 10-15 seconds. The phone will lock itself when the recording begins." />
+
+    <TextView
+        android:id="@+id/explainGPSmode"
+        android:layout_width="287dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/gpsCheckBox"
+        android:layout_alignEnd="@+id/textView"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="60dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="0dp"
+        android:text="This mode log the phone's location every 10-15 seconds. Do not turn off the screen while recording data in this mode." />
+
+</RelativeLayout>
