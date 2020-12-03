@@ -161,6 +161,8 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 	// Start recording
 	private void start() {
 		disableControls();
+
+		//when app is on exemption list (excluded from battery optimization), partial wake lock ensures that CPU keeps running
 		wakeLock.acquire(Constants.WAKE_LOCK_TIMEOUT);
 		Log.d(Constants.TAG, "wakeLock locked.");
 

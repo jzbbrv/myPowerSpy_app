@@ -44,7 +44,7 @@ import java.util.TimerTask;
 import java.util.concurrent.Executor;
 
 public class ListenerThread extends Thread {
-	private static final int LOCATION_MIN_DISTANCE = 10;
+	private static final int LOCATION_MIN_DISTANCE = 1;
 	private static final int LOCATION_MIN_TIME = 500;
 	private static final int THREAD_SLEEP_TIME = 10;
 	private static final String LOG_EXT = ".csv";
@@ -198,17 +198,6 @@ public class ListenerThread extends Thread {
 		batteryTimerTask = new TimerTask() {
 			@Override
 			public void run() {
-				/*try {
-					makeGetRequest();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				try {
-					ListenerThread.this.wait(500);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				*/
 				batamp = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) / 1000;
 				try {
 					if (Build.VERSION.SDK_INT >= 29) {
@@ -259,25 +248,6 @@ public class ListenerThread extends Thread {
 				}
 			}
 		}
-	}
-
-	private void makeGetRequest() throws IOException {
-		URL url = null;
-		try {
-			url = new URL("https://www.google.com/");
-
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		}
-		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-		connection.setReadTimeout(100000); //Milliseconds
-		connection.setConnectTimeout(150000); //Milliseconds
-		connection.setRequestMethod("GET");
-		connection.setDoInput(true);
-		// Start connect
-		connection.connect();
-		String response = connection.getInputStream().toString();
-		Log.d("Response:", response);
 	}
 
 	private void updateLog()
