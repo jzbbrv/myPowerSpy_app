@@ -139,7 +139,7 @@ public class ListenerThread extends Thread {
 				m_outputWriter = new PrintWriter(new BufferedWriter(new FileWriter(App.getAppContext().getExternalFilesDir(null) + "/" + m_outputFilename, false)));
 				Log.d(Constants.TAG, "created outputWriter.");
 			}
-			String str = String.format("Time\tSOD\tVolt\tCurrent\tTemp\tSignal\tLatitude\tLongitude\tMCCMNC\tLAC\tCellID");
+			String str = String.format("Time\tVolt\tCurrent\tSignal\tLatitude\tLongitude\tMCCMNC\tLAC\tCellID");
 			m_outputWriter.println(str);
 			m_outputWriter.flush();
 		} catch (IOException e) {

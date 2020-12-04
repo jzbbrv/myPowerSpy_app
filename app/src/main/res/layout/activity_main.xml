@@ -6,60 +6,33 @@
 
     <TextView
         android:id="@+id/batterycharge"
-        android:layout_width="wrap_content"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:layout_below="@+id/comment"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentBottom="true"
         android:layout_marginStart="50dp"
-        android:layout_marginLeft="50dp"
-        android:layout_marginTop="25dp"
-        android:layout_marginBottom="0dp" />
+        android:layout_marginTop="20dp"
+        android:text="..." />
 
     <Switch
         android:id="@+id/start_stop_switch"
         android:layout_width="300dp"
-        android:layout_height="17dp"
+        android:layout_height="20dp"
         android:layout_below="@+id/textView"
         android:layout_alignStart="@+id/textView"
-        android:layout_alignEnd="@+id/explainBatteryMode"
-        android:layout_marginStart="0dp"
-        android:layout_marginTop="25dp"
-        android:layout_marginEnd="-65dp"
-        android:layout_marginRight="0dp"
-        android:text="Record data" />
-
-    <CheckBox
-        android:id="@+id/gpsCheckBox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/start_stop_switch"
-        android:layout_alignLeft="@+id/batterycharge"
-        android:layout_marginLeft="0dp"
-        android:layout_marginTop="10dp"
-        android:checked="true"
-        android:enabled="true"
-        android:text="GPS mode" />
-
-    <CheckBox
-        android:id="@+id/signalCheckBox"
-        android:layout_width="198dp"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/explainGPSmode"
-        android:layout_alignLeft="@+id/batterycharge"
-        android:layout_marginLeft="0dp"
-        android:layout_marginTop="10dp"
-        android:checked="true"
-        android:text="Battery + network mode" />
+        android:layout_alignEnd="@+id/textView"
+        android:layout_marginTop="20dp"
+        android:text="Record data"
+        tools:ignore="UseSwitchCompatOrMaterialXml" />
 
     <EditText
         android:id="@+id/comment"
         android:layout_width="310dp"
         android:layout_height="wrap_content"
         android:layout_below="@+id/commentTextView"
-        android:layout_alignLeft="@+id/commentTextView"
+        android:layout_alignStart="@+id/commentTextView"
         android:layout_alignEnd="@+id/start_stop_switch"
-        android:layout_marginLeft="0dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginStart="0dp"
         android:layout_marginTop="5dp"
         android:layout_marginEnd="0dp"
         android:ems="10"
@@ -73,10 +46,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/explainBatteryMode"
-        android:layout_alignLeft="@+id/batterycharge"
-        android:layout_marginLeft="0dp"
-        android:layout_marginTop="10dp"
-        android:text="comment" />
+        android:layout_alignStart="@+id/batterycharge"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="25dp"
+        android:text="add comment to csv-file" />
 
     <TextView
         android:id="@+id/textView"
@@ -85,36 +58,103 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginStart="50dp"
-        android:layout_marginTop="50dp"
-        android:layout_marginEnd="60dp"
-        android:text="My PowerSpy"
-        android:textColor="#000000"
+        android:layout_marginStart="40dp"
+        android:layout_marginTop="40dp"
+        android:layout_marginEnd="40dp"
+        android:text="myPowerSpy"
+        android:textColor="#ffffff"
         android:textSize="25sp"
         android:textStyle="bold" />
 
     <TextView
-        android:id="@+id/explainBatteryMode"
-        android:layout_width="287dp"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/signalCheckBox"
-        android:layout_alignEnd="@+id/explainGPSmode"
-        android:layout_alignParentStart="true"
-        android:layout_marginStart="60dp"
-        android:layout_marginTop="5dp"
-        android:layout_marginEnd="0dp"
-        android:text="This mode log the phone's battery consumption and connected cell tower every 10-15 seconds. The phone will lock itself when the recording begins." />
-
-    <TextView
         android:id="@+id/explainGPSmode"
-        android:layout_width="287dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/gpsCheckBox"
+        android:layout_alignStart="@+id/gpsCheckBox"
         android:layout_alignEnd="@+id/textView"
-        android:layout_alignParentStart="true"
-        android:layout_marginStart="60dp"
-        android:layout_marginTop="5dp"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="0dp"
         android:layout_marginEnd="0dp"
-        android:text="This mode log the phone's location every 10-15 seconds. Do not turn off the screen while recording data in this mode." />
+        android:text="This mode logs the phone's location, the received signal strength and the currently connected base station. Do not turn off the screen while recording data in this mode." />
+
+    <CheckBox
+        android:id="@+id/gpsCheckBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textView3"
+        android:layout_alignStart="@+id/checkBox2"
+        android:layout_marginStart="25dp"
+        android:layout_marginTop="10dp"
+        android:checked="true"
+        android:enabled="true"
+        android:text="GPS and network mode" />
+
+    <CheckBox
+        android:id="@+id/signalCheckBox"
+        android:layout_width="198dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/explainGPSmode"
+        android:layout_alignStart="@+id/checkBox2"
+        android:layout_marginStart="25dp"
+        android:layout_marginTop="10dp"
+        android:checked="true"
+        android:text="battery mode" />
+
+    <TextView
+        android:id="@+id/explainBatteryMode"
+        android:layout_width="262dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/signalCheckBox"
+        android:layout_alignStart="@+id/signalCheckBox"
+        android:layout_alignEnd="@+id/textView"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginEnd="0dp"
+        android:text="This mode logs the phone's battery consumption while sending out data. You can log the phone as soon as the recording begins." />
+
+    <CheckBox
+        android:id="@+id/checkBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/start_stop_switch"
+        android:layout_alignStart="@+id/start_stop_switch"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="15dp"
+        android:text="one-phone setup" />
+
+    <CheckBox
+        android:id="@+id/checkBox2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textView2"
+        android:layout_alignStart="@+id/checkBox"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="15dp"
+        android:text="two-phone setup" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/checkBox"
+        android:layout_alignStart="@+id/checkBox"
+        android:layout_alignEnd="@+id/textView"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginEnd="0dp"
+        android:text="Choose this if you want to collect all data on one phone. Do not lock the phone or leave the app while recording." />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/checkBox2"
+        android:layout_alignStart="@+id/checkBox2"
+        android:layout_alignEnd="@+id/textView"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginEnd="0dp"
+        android:text="Choose this if you want to record data with two phones." />
 
 </RelativeLayout>
