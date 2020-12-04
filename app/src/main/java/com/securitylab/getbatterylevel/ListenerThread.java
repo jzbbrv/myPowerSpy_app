@@ -48,12 +48,15 @@ public class ListenerThread extends Thread {
 	private static final int LOCATION_MIN_TIME = 500;
 	private static final int THREAD_SLEEP_TIME = 10;
 	private static final String LOG_EXT = ".csv";
-	private int signalstrength, batlevel, batvolt, battemp, batamp, cellId, lac = 0;
+	private int signalstrength, batvolt, batamp, cellId, lac = 0;
 	private int mccmnc = 26201;
 	private double latitude, longitude = 0;
 	private boolean gpsMode;
 	private boolean batteryMode;
 	private boolean m_execute = true;
+	private int batteryCount = 0;
+	private int averageBatAmp;
+	private int averageBatVolt;
 
 	private Service m_service;
 	private TelephonyManager m_telephonyMgr;
@@ -67,8 +70,9 @@ public class ListenerThread extends Thread {
 	private BatteryManager bm;
 	private final Handler updateHandler = new Handler();
 	private Timer logTimer;
-	private TimerTask gpsTimerTask;
+	private TimerTask logTimerTask;
 	private TimerTask batteryTimerTask;
+	private TimerTask cellInfoTimerTask;
 	private GsmCellLocation gsmCellLocation;
 	private SignalStrength mSignalStrength;
 	private List<CellInfo> cellInfoList;
@@ -158,7 +162,7 @@ public class ListenerThread extends Thread {
 				Log.e(Constants.TAG, e.getMessage());
 				e.printStackTrace();
 			}
-			createGpsTimerTask();
+			createLogTimerTask(5000, true);
 		} else if (batteryMode) {
 			lac = gsmCellLocation.getLac();
 			cellId = gsmCellLocation.getCid();
@@ -171,34 +175,39 @@ public class ListenerThread extends Thread {
 			batteryReceiver = new BroadcastReceiver() {
 				@Override
 				public void onReceive(Context context, Intent intent) {
-					batlevel = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-					battemp = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
 					batvolt = intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
-					Log.d(Constants.TAG, "read from battery.");
+					Log.d(Constants.TAG, "updated battery voltage.");
 				}
 			};
 
 			batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
 			App.getAppContext().registerReceiver(batteryReceiver, batteryFilter);
+			createCellInfoTimerTask();
 			createBatteryTimerTask();
+			createLogTimerTask(10000, false);
 		}
 	}
 
-	public void createGpsTimerTask() {
-		gpsTimerTask = new TimerTask() {
+	/**
+	 * log latest position every 10 seconds, delay to decide when to log, either in middle
+	 * or at the end of each interval
+	 * @param delay of start
+	 * @param logTimeIsNow: true when logged at end of 10 interval, false if logged in the middle
+	 */
+	public void createLogTimerTask(int delay, final boolean logTimeIsNow) {
+		logTimerTask = new TimerTask() {
 			@Override
 			public void run() {
-				updateLog();
+				updateLog(logTimeIsNow);
 			}
 		};
-		startTimer(gpsTimerTask);
+		startTimer(logTimerTask, delay, 10000);
 	}
 
-	public void createBatteryTimerTask() {
-		batteryTimerTask = new TimerTask() {
+	public void createCellInfoTimerTask() {
+		cellInfoTimerTask = new TimerTask() {
 			@Override
 			public void run() {
-				batamp = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) / 1000;
 				try {
 					if (Build.VERSION.SDK_INT >= 29) {
 						m_telephonyMgr.requestCellInfoUpdate(App.getAppContext().getMainExecutor(), new TelephonyManager.CellInfoCallback() {
@@ -207,7 +216,6 @@ public class ListenerThread extends Thread {
 								Log.d(Constants.TAG, "CellInfoCallback()");
 								cellInfoList = cellInfo;
 								handleCellInfoList();
-								updateLog();
 							}
 						});
 					} else {
@@ -218,13 +226,35 @@ public class ListenerThread extends Thread {
 				}
 			}
 		};
-		startTimer(batteryTimerTask);
+		startTimer(cellInfoTimerTask, 5000, 10000);
 	}
 
-	public void startTimer(TimerTask task) {
+	/**
+	 * obtains latest amp of battery every second
+	 * and calculates average for the 10 sec interval
+	 */
+	public void createBatteryTimerTask() {
+		batteryTimerTask = new TimerTask() {
+			@Override
+			public void run() {
+				int currentBatAmp = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) / 1000;
+				Log.d(Constants.TAG, "current batamp: " + currentBatAmp);
+				batamp += currentBatAmp;
+				batteryCount++;
+				if (batteryCount % 10 == 0) {
+					averageBatAmp = batamp / 10;
+					averageBatVolt = batvolt / 10;
+					batamp = 0;
+				}
+			}
+		};
+		startTimer(batteryTimerTask, 0 , 1000);
+	}
+
+	public void startTimer(TimerTask task, int startTimeDelay, int rate) {
 		long currentTime = System.currentTimeMillis();
-		long startTime = ((System.currentTimeMillis() / 10000) + 1) * 10000;
-		logTimer.scheduleAtFixedRate(task, startTime - currentTime, Constants.LOG_INTERVAL);
+		long startTime = (((System.currentTimeMillis() / 10000) + 1) * 10000) + startTimeDelay;
+		logTimer.scheduleAtFixedRate(task, startTime - currentTime, rate);
 		Log.d(Constants.TAG, "current time: " + currentTime + ", recording will start at " + startTime);
 	}
 
@@ -250,32 +280,36 @@ public class ListenerThread extends Thread {
 		}
 	}
 
-	private void updateLog()
+	private void updateLog(boolean now)
 	{
-		Log.d(Constants.TAG, "updating log...");
-		long currTime = System.currentTimeMillis();
+		Log.d(Constants.TAG, "updating log at " + System.currentTimeMillis());
+
+		long logTime;
+		if (now) {
+			logTime = System.currentTimeMillis();
+		} else {
+			//logs data collected in interval 0 to 10 sec at sec 10 with current time from 5 sec ago
+			logTime = System.currentTimeMillis() - 5000;
+		}
+    	String record = "Time " + logTime + "\nVolt " + batvolt + "\nAmp " + averageBatAmp +
+				"\nSignal strength " + signalstrength + "\nLatitude " + latitude +
+				"\nLongitude " + longitude + "\nMCCMNC " + mccmnc + "\nLAC " + lac +
+    			"\nCell ID " + cellId + ".";
 
 		//send record string to UI
-    	String record = "Time " + currTime + "\nLevel " + batlevel +
-    			"\nVolt " + batvolt + "\nAmp " + batamp + "\nTemp " + battemp
-    			+ "\nSignal strength " + signalstrength
-    			+ "\nLatitude " + latitude + "\nLongtitude " + longitude + "\nMCCMNC " + mccmnc + "\nLAC " + lac +
-    			"\nCell ID " + cellId + ".";
-    	
 		Message msg = Message.obtain();
 		msg.obj = record;
 		Main.m_inhandler.sendMessage(msg);
 		
-	    final String logLine = prepareLogLine(currTime);
-
+	    final String logLine = prepareLogLine(logTime);
 	    if (m_outputWriter != null) {
 			m_outputWriter.println(logLine);
 			m_outputWriter.flush();
 		}
-	} // end of updateLog
+	}
 
 	private String prepareLogLine(long currTime) {
-		String s = currTime + "\t" + batlevel + "\t" + batvolt + "\t" + batamp + "\t" + battemp + "\t" + signalstrength
+		String s = currTime +  "\t" + batvolt + "\t" + batamp + "\t" + signalstrength
 				+ "\t" + latitude + "\t" + longitude + "\t" + mccmnc + "\t" + lac + "\t" + cellId;
 		return s;
 	}
@@ -287,7 +321,6 @@ public class ListenerThread extends Thread {
 			Log.d(Constants.TAG, "onCellInfoChanged()");
 			cellInfoList = cellInfo;
 			handleCellInfoList();
-			updateLog();
 		}
 	};
 
@@ -311,11 +344,15 @@ public class ListenerThread extends Thread {
 		Log.d(Constants.TAG, "handling stop.");
 		if (batteryMode) {
 			m_telephonyMgr.listen(myPhoneStateListener, PhoneStateListener.LISTEN_NONE);
+			App.getAppContext().unregisterReceiver(batteryReceiver);
 			batteryTimerTask.cancel();
+			cellInfoTimerTask.cancel();
+			logTimerTask.cancel();
+			batteryCount = 0;
 		}
 		if (gpsMode) {
 			mLocationManager.removeUpdates(onLocationChange);
-			gpsTimerTask.cancel();
+			logTimerTask.cancel();
 		}
 		if (null != m_outputWriter) {
 			m_outputWriter.close();
