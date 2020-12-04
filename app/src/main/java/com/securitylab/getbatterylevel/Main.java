@@ -9,13 +9,10 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.os.PowerManager;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -23,7 +20,6 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import java.lang.ref.WeakReference;
@@ -46,11 +42,18 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 	private TextView explainBatteryMode;
 	private EditText m_commentTxt;
 	private Switch m_startStopSwitch;
+	private CheckBox cbOnePhoneSetup;
+	private TextView explainOnePhoneSetupTextView;
+	private CheckBox cbTwoPhoneSetup;
+	private TextView explainTwoPhoneSetupTextView;
 	
 	// Receives messages from the background service
 	protected static IncomingHandler m_inhandler;
 	
 	private ServiceConnection m_serviceConnection;
+
+	public Main() {
+	}
 	/*
 	private boolean isMyServiceRunning(Class<?> serviceClass) {
 	    ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -72,7 +75,16 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 				"MyApp::MyWakelockTag");
 		
 		setContentView(R.layout.activity_main);
-		liveView = findViewById(R.id.batterycharge);
+
+		cbOnePhoneSetup = findViewById(R.id.cbOnePhoneSetup);
+		cbOnePhoneSetup.setChecked(false);
+		explainOnePhoneSetupTextView = findViewById(R.id.explainOnePhoneSetupTextView);
+		cbOnePhoneSetupListener();
+
+		cbTwoPhoneSetup = findViewById(R.id.cbTwoPhoneSetup);
+		cbTwoPhoneSetup.setChecked(false);
+		explainTwoPhoneSetupTextView = findViewById(R.id.explainTwoPhoneSetupTextView);
+		cbTwoPhoneSetupListener();
 
 		cbGPS = findViewById(R.id.gpsCheckBox);
 		cbGPS.setChecked(false);
@@ -142,6 +154,44 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 		});
 	}
 
+	private void cbOnePhoneSetupListener() {
+		cbOnePhoneSetup.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				if(cbOnePhoneSetup.isChecked()) {
+					cbTwoPhoneSetup.setEnabled(false);
+					explainTwoPhoneSetupTextView.setEnabled(false);
+					cbGPS.setEnabled(false);
+					explainGPSMode.setEnabled(false);
+					cbBattery.setEnabled(false);
+					explainBatteryMode.setEnabled(false);
+				} else {
+					cbTwoPhoneSetup.setEnabled(true);
+					explainTwoPhoneSetupTextView.setEnabled(true);
+					cbGPS.setEnabled(true);
+					explainGPSMode.setEnabled(true);
+					cbBattery.setEnabled(true);
+					explainBatteryMode.setEnabled(true);
+				}
+			}
+		});
+	}
+
+	private void cbTwoPhoneSetupListener() {
+		cbTwoPhoneSetup.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				if(cbTwoPhoneSetup.isChecked()) {
+					cbOnePhoneSetup.setEnabled(false);
+					explainOnePhoneSetupTextView.setEnabled(false);
+				} else {
+					cbOnePhoneSetup.setEnabled(true);
+					explainOnePhoneSetupTextView.setEnabled(true);
+				}
+			}
+		});
+	}
+
 	@Override
 	public void onCheckedChanged(CompoundButton btnView, boolean isChecked)
 	{
@@ -160,7 +210,8 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 
 	// Start recording
 	private void start() {
-		disableControls();
+		//disable all controls
+		EnableDisableControls(false);
 
 		//when app is on exemption list (excluded from battery optimization), partial wake lock ensures that CPU keeps running
 		wakeLock.acquire(Constants.WAKE_LOCK_TIMEOUT);
@@ -178,7 +229,7 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 	}
 
 	private void stop() {
-		enableControls();
+		EnableDisableControls(true);
 		cbGPS.setChecked(false);
 		cbBattery.setChecked(false);
 		explainGPSMode.setEnabled(true);
@@ -195,20 +246,16 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 		}
 	}
 
-	private void enableControls() {
-		cbGPS.setEnabled(true);
-		explainGPSMode.setEnabled(true);
-		cbBattery.setEnabled(true);
-		explainBatteryMode.setEnabled(true);
-		m_commentTxt.setEnabled(true);
-	}
-
-	private void disableControls() {
-		cbGPS.setEnabled(false);
-		explainGPSMode.setEnabled(false);
-		cbBattery.setEnabled(false);
-		explainBatteryMode.setEnabled(false);
-		m_commentTxt.setEnabled(false);
+	private void EnableDisableControls(boolean enable) {
+		cbGPS.setEnabled(enable);
+		explainGPSMode.setEnabled(enable);
+		cbBattery.setEnabled(enable);
+		explainBatteryMode.setEnabled(enable);
+		m_commentTxt.setEnabled(enable);
+		cbOnePhoneSetup.setEnabled(enable);
+		explainOnePhoneSetupTextView.setEnabled(enable);
+		cbTwoPhoneSetup.setEnabled(enable);
+		explainOnePhoneSetupTextView.setEnabled(enable);
 	}
 
 	public void checkLocationPermission() {

@@ -87,8 +87,8 @@
         android:id="@+id/gpsCheckBox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/textView3"
-        android:layout_alignStart="@+id/checkBox2"
+        android:layout_below="@+id/explainTwoPhoneSetupTextView"
+        android:layout_alignStart="@+id/cbTwoPhoneSetup"
         android:layout_marginStart="25dp"
         android:layout_marginTop="10dp"
         android:checked="true"
@@ -100,7 +100,7 @@
         android:layout_width="198dp"
         android:layout_height="wrap_content"
         android:layout_below="@+id/explainGPSmode"
-        android:layout_alignStart="@+id/checkBox2"
+        android:layout_alignStart="@+id/cbTwoPhoneSetup"
         android:layout_marginStart="25dp"
         android:layout_marginTop="10dp"
         android:checked="true"
@@ -119,7 +119,7 @@
         android:text="logs battery consumption while sending data." />
 
     <CheckBox
-        android:id="@+id/checkBox"
+        android:id="@+id/cbOnePhoneSetup"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/start_stop_switch"
@@ -129,21 +129,21 @@
         android:text="one-phone setup" />
 
     <CheckBox
-        android:id="@+id/checkBox2"
+        android:id="@+id/cbTwoPhoneSetup"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/textView2"
-        android:layout_alignStart="@+id/checkBox"
+        android:layout_below="@+id/explainOnePhoneSetupTextView"
+        android:layout_alignStart="@+id/cbOnePhoneSetup"
         android:layout_marginStart="0dp"
         android:layout_marginTop="15dp"
         android:text="two-phone setup" />
 
     <TextView
-        android:id="@+id/textView2"
+        android:id="@+id/explainOnePhoneSetupTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/checkBox"
-        android:layout_alignStart="@+id/checkBox"
+        android:layout_below="@+id/cbOnePhoneSetup"
+        android:layout_alignStart="@+id/cbOnePhoneSetup"
         android:layout_alignEnd="@+id/textView"
         android:layout_marginStart="0dp"
         android:layout_marginTop="0dp"
@@ -151,11 +151,11 @@
         android:text="collects all data on one phone. Do not lock the phone or leave the app while using this setup." />
 
     <TextView
-        android:id="@+id/textView3"
+        android:id="@+id/explainTwoPhoneSetupTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/checkBox2"
-        android:layout_alignStart="@+id/checkBox2"
+        android:layout_below="@+id/cbTwoPhoneSetup"
+        android:layout_alignStart="@+id/cbTwoPhoneSetup"
         android:layout_alignEnd="@+id/textView"
         android:layout_marginStart="0dp"
         android:layout_marginTop="0dp"
