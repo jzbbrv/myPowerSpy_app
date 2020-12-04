@@ -6,11 +6,16 @@
 
     <TextView
         android:id="@+id/batterycharge"
-        android:layout_width="100dp"
+        android:layout_width="301dp"
         android:layout_height="wrap_content"
         android:layout_below="@+id/comment"
-        android:layout_marginStart="50dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="40dp"
         android:layout_marginTop="20dp"
+        android:layout_marginEnd="40dp"
+        android:layout_marginBottom="40dp"
         android:text="..." />
 
     <Switch
@@ -76,7 +81,7 @@
         android:layout_marginStart="0dp"
         android:layout_marginTop="0dp"
         android:layout_marginEnd="0dp"
-        android:text="This mode logs the phone's location, the received signal strength and the currently connected base station. Do not turn off the screen while recording data in this mode." />
+        android:text="logs the phone's location, received signal strength and the currently connected base station. Do not turn off the screen while using this mode." />
 
     <CheckBox
         android:id="@+id/gpsCheckBox"
@@ -111,7 +116,7 @@
         android:layout_marginStart="0dp"
         android:layout_marginTop="0dp"
         android:layout_marginEnd="0dp"
-        android:text="This mode logs the phone's battery consumption while sending out data. You can log the phone as soon as the recording begins." />
+        android:text="logs battery consumption while sending data." />
 
     <CheckBox
         android:id="@+id/checkBox"
@@ -143,7 +148,7 @@
         android:layout_marginStart="0dp"
         android:layout_marginTop="0dp"
         android:layout_marginEnd="0dp"
-        android:text="Choose this if you want to collect all data on one phone. Do not lock the phone or leave the app while recording." />
+        android:text="collects all data on one phone. Do not lock the phone or leave the app while using this setup." />
 
     <TextView
         android:id="@+id/textView3"
@@ -155,6 +160,6 @@
         android:layout_marginStart="0dp"
         android:layout_marginTop="0dp"
         android:layout_marginEnd="0dp"
-        android:text="Choose this if you want to record data with two phones." />
+        android:text="run each of the following modes on one phone." />
 
 </RelativeLayout>
