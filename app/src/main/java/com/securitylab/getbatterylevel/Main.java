@@ -88,16 +88,22 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 
 		cbGPS = findViewById(R.id.gpsCheckBox);
 		cbGPS.setChecked(false);
+		cbGPS.setEnabled(false);
 		explainGPSMode = findViewById(R.id.explainGPSmode);
+		explainGPSMode.setEnabled(false);
 		cbGPS_listen();
 
 		cbBattery = findViewById(R.id.signalCheckBox);
 		cbBattery.setChecked(false);
+		cbBattery.setEnabled(false);
 		explainBatteryMode = findViewById(R.id.explainBatteryMode);
+		explainBatteryMode.setEnabled(false);
 		cbBattery_listen();
 
 		m_commentTxt = findViewById(R.id.comment);
 		m_startStopSwitch = findViewById(R.id.start_stop_switch);
+
+		liveView = findViewById(R.id.liveView);
 
 		alertBuilder = new AlertDialog.Builder(this);
 
@@ -184,9 +190,17 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 				if(cbTwoPhoneSetup.isChecked()) {
 					cbOnePhoneSetup.setEnabled(false);
 					explainOnePhoneSetupTextView.setEnabled(false);
+					cbGPS.setEnabled(true);
+					explainGPSMode.setEnabled(true);
+					cbBattery.setEnabled(true);
+					explainBatteryMode.setEnabled(true);
 				} else {
 					cbOnePhoneSetup.setEnabled(true);
 					explainOnePhoneSetupTextView.setEnabled(true);
+					cbGPS.setEnabled(false);
+					explainGPSMode.setEnabled(false);
+					cbBattery.setEnabled(false);
+					explainBatteryMode.setEnabled(false);
 				}
 			}
 		});
@@ -197,7 +211,7 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 	{
 		Log.d(Constants.TAG, String.format("Changed recording state to %s", isChecked ? "on" : "off"));
 		if (isChecked) {
-			if (cbBattery.isChecked() || cbGPS.isChecked()) {
+			if (cbBattery.isChecked() || cbGPS.isChecked() || cbOnePhoneSetup.isChecked()) {
 				start();
 			} else {
 				m_startStopSwitch.setChecked(false);
@@ -211,7 +225,7 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 	// Start recording
 	private void start() {
 		//disable all controls
-		EnableDisableControls(false);
+		enableDisableControls(false);
 
 		//when app is on exemption list (excluded from battery optimization), partial wake lock ensures that CPU keeps running
 		wakeLock.acquire(Constants.WAKE_LOCK_TIMEOUT);
@@ -219,8 +233,9 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 
         //activateDoubleTapListener();
 
-		// Send command to background service
+		// Send command to background service with user's mode selection + comment
 		Intent startRecIntent = new Intent(App.getAppContext(), BackgroundRecorder.class);
+		startRecIntent.putExtra(Constants.EXTRA_ONEPHONE, cbOnePhoneSetup.isChecked());
 		startRecIntent.putExtra(Constants.EXTRA_GPS, cbGPS.isChecked());
 		startRecIntent.putExtra(Constants.EXTRA_BATTERY, cbBattery.isChecked());
 		startRecIntent.putExtra(Constants.EXTRA_COMMENT, m_commentTxt.getText().toString());
@@ -229,11 +244,11 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 	}
 
 	private void stop() {
-		EnableDisableControls(true);
+		enableDisableControls(true);
+		cbOnePhoneSetup.setChecked(false);
+		cbTwoPhoneSetup.setChecked(false);
 		cbGPS.setChecked(false);
 		cbBattery.setChecked(false);
-		explainGPSMode.setEnabled(true);
-		explainBatteryMode.setEnabled(true);
 		wakeLock.release();
 
 		Log.d(Constants.TAG, "wakeLock released.");
@@ -246,7 +261,7 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 		}
 	}
 
-	private void EnableDisableControls(boolean enable) {
+	private void enableDisableControls(boolean enable) {
 		cbGPS.setEnabled(enable);
 		explainGPSMode.setEnabled(enable);
 		cbBattery.setEnabled(enable);
@@ -255,7 +270,7 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 		cbOnePhoneSetup.setEnabled(enable);
 		explainOnePhoneSetupTextView.setEnabled(enable);
 		cbTwoPhoneSetup.setEnabled(enable);
-		explainOnePhoneSetupTextView.setEnabled(enable);
+		explainTwoPhoneSetupTextView.setEnabled(enable);
 	}
 
 	public void checkLocationPermission() {

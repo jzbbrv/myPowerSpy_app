@@ -10,6 +10,7 @@ public class Constants {
 	public static final long WAKE_LOCK_TIMEOUT = 3600000;
 
 	// Intent extras
+	public static final String EXTRA_ONEPHONE = "com.securitylab.getbatterylevel.cbOnePhoneSetup";
 	public static final String EXTRA_GPS = "com.securitylab.getbatterylevel.cbGPS";
 	public static final String EXTRA_SIGNAL_STRENGTH = "com.securitylab.getbatterylevel.cbSignalStrength";
 	public static final String EXTRA_BATTERY = "com.securitylab.getbatterylevel.cbBattery";

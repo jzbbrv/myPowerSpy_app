@@ -19,6 +19,9 @@ public class BackgroundRecorder extends Service {
 	private boolean m_running = false;
 	private Intent m_workIntent = null;
 	private static final int NOTIFICATION_ID = 77;
+	public boolean cbOnePhoneSetup, cbGPS, cbBattery;
+	public String comment;
+
 
 	private final IBinder m_binder = new BackgroundRecorderBinder();
 
@@ -32,6 +35,7 @@ public class BackgroundRecorder extends Service {
 		super();
 	}
 
+	/*
 	public boolean isRunning() {
 		return m_running;
 	}
@@ -39,6 +43,7 @@ public class BackgroundRecorder extends Service {
 	public Intent getWorkIntent() {
 		return m_workIntent;
 	}
+	*/
 
 	@Override
 	public int onStartCommand(Intent workIntent, int flags, int startId) {
@@ -48,21 +53,25 @@ public class BackgroundRecorder extends Service {
 		makeForegroundService();
 		m_workIntent = workIntent;
 
-		startListenerThread();
-		Log.d(Constants.TAG, "Started Listener thread");
+		Bundle extras = m_workIntent.getExtras();
+		cbOnePhoneSetup = extras.getBoolean(Constants.EXTRA_ONEPHONE);
+		cbGPS = extras.getBoolean(Constants.EXTRA_GPS);
+		cbBattery = extras.getBoolean(Constants.EXTRA_BATTERY);
+		comment = extras.getString(Constants.EXTRA_COMMENT);
 
-		startNetworkThread();
+		startListenerThread();
+		Log.d(Constants.TAG, "Started listener thread");
+
+		if (cbOnePhoneSetup || cbBattery) {
+			startNetworkThread();
+			Log.d(Constants.TAG, "Started network thread");
+		}
 		m_running = true;
 		return START_REDELIVER_INTENT;
 	}
 
 	private void startListenerThread() {
-		Bundle extras = m_workIntent.getExtras();
-		final boolean cbGPS_value = extras.getBoolean(Constants.EXTRA_GPS);
-		final boolean cbBattery_value = extras.getBoolean(Constants.EXTRA_BATTERY);
-		final String comment = extras.getString(Constants.EXTRA_COMMENT);
-
-		m_listenerThread = new ListenerThread(this, cbGPS_value, cbBattery_value, comment);
+				m_listenerThread = new ListenerThread(this, cbOnePhoneSetup, cbGPS, cbBattery, comment);
 		m_listenerThread.start();
 	}
 
