@@ -4,7 +4,7 @@ public class Constants {
 	// Hardware status files
 	public static final String TAG = "GetBatteryLevel";
 	public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
-	//public static final int LOG_INTERVAL = 10000;
+	public static final int READ_BATTERY_RATE = 500; //1000 = jede sec
 
 	//keep wakelock active for max. 1 hour
 	public static final long WAKE_LOCK_TIMEOUT = 3600000;

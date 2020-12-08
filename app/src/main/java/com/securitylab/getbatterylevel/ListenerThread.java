@@ -255,15 +255,15 @@ public class ListenerThread extends Thread {
 				batamp += currentBatAmp;
 				batvolt += currentBatVolt;
 				batteryCount++;
-				if (batteryCount % 10 == 0) {
-					averageBatAmp = batamp / 10;
-					averageBatVolt = batvolt / 10;
+				if (batteryCount % (10000 / Constants.READ_BATTERY_RATE) == 0) {
+					averageBatAmp = batamp / (10000 / Constants.READ_BATTERY_RATE);
+					averageBatVolt = batvolt / (10000 / Constants.READ_BATTERY_RATE);
 					batamp = 0;
 					batvolt = 0;
 				}
 			}
 		};
-		startTimer(batteryTimerTask, 0 , 1000);
+		startTimer(batteryTimerTask, 0 , Constants.READ_BATTERY_RATE);
 	}
 
 	public void startTimer(TimerTask task, int startTimeDelay, int rate) {

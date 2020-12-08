@@ -174,10 +174,6 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 				} else {
 					cbTwoPhoneSetup.setEnabled(true);
 					explainTwoPhoneSetupTextView.setEnabled(true);
-					cbGPS.setEnabled(true);
-					explainGPSMode.setEnabled(true);
-					cbBattery.setEnabled(true);
-					explainBatteryMode.setEnabled(true);
 				}
 			}
 		});
@@ -198,9 +194,12 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 					cbOnePhoneSetup.setEnabled(true);
 					explainOnePhoneSetupTextView.setEnabled(true);
 					cbGPS.setEnabled(false);
+					cbGPS.setChecked(false);
 					explainGPSMode.setEnabled(false);
 					cbBattery.setEnabled(false);
+					cbBattery.setChecked(false);
 					explainBatteryMode.setEnabled(false);
+
 				}
 			}
 		});
