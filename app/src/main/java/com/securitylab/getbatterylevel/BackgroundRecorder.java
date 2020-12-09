@@ -1,29 +1,26 @@
 package com.securitylab.getbatterylevel;
+
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 
 public class BackgroundRecorder extends Service {
+	private final IBinder m_binder = new BackgroundRecorderBinder();
 	private ListenerThread m_listenerThread;
 	private NetworkThread m_networkThread;
-	private boolean m_running = false;
 	private Intent m_workIntent = null;
-	private static final int NOTIFICATION_ID = 77;
-	public boolean cbOnePhoneSetup, cbGPS, cbBattery;
 	public String comment;
 
-
-	private final IBinder m_binder = new BackgroundRecorderBinder();
+	private static final int NOTIFICATION_ID = 77;
+	private boolean m_running = false;
+	private boolean cbOnePhoneSetup, cbGPS, cbBattery;
 
 	public class BackgroundRecorderBinder extends Binder {
 		BackgroundRecorder getService() {
@@ -80,6 +77,7 @@ public class BackgroundRecorder extends Service {
 		m_listenerThread.start();
 	}
 
+	/*
 	private void startNetworkThread() {
 		TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
 		if (tm.getSimState() != TelephonyManager.SIM_STATE_ABSENT) {
@@ -88,6 +86,7 @@ public class BackgroundRecorder extends Service {
 			Log.d(Constants.TAG, "Started Network thread");
 		}
 	}
+	*/
 
 	private void makeForegroundService() {
 		//create notification channel

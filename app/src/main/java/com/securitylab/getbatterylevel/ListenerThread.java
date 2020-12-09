@@ -262,7 +262,7 @@ public class ListenerThread extends Thread {
 					currentBatAmp = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) / 1000;
 					//long stop = System.currentTimeMillis();
 					//Log.d(TAG, "elapsed time between start of sending and reading out battery stats: " + (stop - start));
-
+					Log.d(TAG, "send data package and read battery: " + System.currentTimeMillis());
 					//Update battery stats
 					batamp += currentBatAmp;
 					batvolt += currentBatVolt;

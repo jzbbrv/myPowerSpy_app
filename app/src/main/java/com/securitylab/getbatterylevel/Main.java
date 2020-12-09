@@ -13,6 +13,7 @@ import android.os.Message;
 import android.os.PowerManager;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -46,6 +47,7 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 	private TextView explainOnePhoneSetupTextView;
 	private CheckBox cbTwoPhoneSetup;
 	private TextView explainTwoPhoneSetupTextView;
+	private Button filesButton;
 	
 	// Receives messages from the background service
 	protected static IncomingHandler m_inhandler;
@@ -69,11 +71,11 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
 		PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
 		wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
 				"MyApp::MyWakelockTag");
 		
+		//initialize UI
 		setContentView(R.layout.activity_main);
 
 		cbOnePhoneSetup = findViewById(R.id.cbOnePhoneSetup);
@@ -100,11 +102,12 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 		explainBatteryMode.setEnabled(false);
 		cbBattery_listen();
 
+		//filesButton = findViewById(R.id.fileButton);
+		//filesButton_listen();
+
 		m_commentTxt = findViewById(R.id.comment);
 		m_startStopSwitch = findViewById(R.id.start_stop_switch);
-
 		liveView = findViewById(R.id.liveView);
-
 		alertBuilder = new AlertDialog.Builder(this);
 
 	    /*
@@ -204,6 +207,21 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 			}
 		});
 	}
+
+	/*
+	public void filesButton_listen() {
+		filesButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Intent openFileIntent = new Intent();
+				openFileIntent.setAction(Intent.ACTION_GET_CONTENT);
+				openFileIntent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+				openFileIntent.setType("/" + App.getAppContext().getExternalFilesDir(null));
+				startActivity(Intent.createChooser(openFileIntent, "Open folder"));
+			}
+		});
+	}
+	*/
 
 	@Override
 	public void onCheckedChanged(CompoundButton btnView, boolean isChecked)

@@ -22,6 +22,7 @@ public class NetworkThread extends Thread {
 	
 	public void run()
 	{
+		Log.d("Network Thread", "started NetworkThread.");
 		try {
 			s = new DatagramSocket();
 			server = InetAddress.getByName(GOOGLE_DNS_SERVER);
@@ -59,5 +60,6 @@ public class NetworkThread extends Thread {
 	public void quit()
 	{
 		networkTimer.cancel();
+		Log.d("Network Thread", "cancelled NetworkThread.");
 	}
 }
