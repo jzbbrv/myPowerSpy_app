@@ -253,15 +253,12 @@ public class ListenerThread extends Thread {
 			@Override
 			public void run() {
 				try {
+					int currentBatAmp;
 					//send data package and read out battery consumption
 					byte[] message = new byte[1000];
-					int currentBatAmp;
 					DatagramPacket p = new DatagramPacket(message, 1000, server, Constants.SERVER_PORT);
-					//long start = System.currentTimeMillis();
 					s.send(p);
 					currentBatAmp = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) / 1000;
-					//long stop = System.currentTimeMillis();
-					//Log.d(TAG, "elapsed time between start of sending and reading out battery stats: " + (stop - start));
 					Log.d(TAG, "send data package and read battery: " + System.currentTimeMillis());
 					//Update battery stats
 					batamp += currentBatAmp;
