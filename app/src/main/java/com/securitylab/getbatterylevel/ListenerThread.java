@@ -12,17 +12,13 @@ import android.location.LocationManager;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.os.PowerManager;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
 import android.telephony.PhoneStateListener;
-import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
-import android.telephony.gsm.GsmCellLocation;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -32,50 +28,49 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.Executor;
 
 public class ListenerThread extends Thread {
 	private static final int LOCATION_MIN_DISTANCE = 1;
 	private static final int LOCATION_MIN_TIME = 500;
 	private static final int THREAD_SLEEP_TIME = 10;
 	private static final String LOG_EXT = ".csv";
-	private int signalstrength, batvolt, batamp, cellId, lac = 0;
-	private int mccmnc = 26201;
-	private double currentLatitude, currentLongitude, latitude, longitude = 0;
-	private boolean gpsAndCellInfoMode;
-	private boolean batteryMode;
-	private boolean onePhoneSetup;
-	private boolean m_execute = true;
-	private int batteryCount = 0;
-	private int averageBatAmp;
-	private int averageBatVolt;
-	private int currentBatVolt;
+	private static final String TAG = "ListenerThread";
 
-	private Service m_service;
+	private final Service m_service;
 	private TelephonyManager m_telephonyMgr;
 	private LocationManager mLocationManager;
 	private BroadcastReceiver batteryReceiver;
-	private IntentFilter batteryFilter;
 	private String m_outputFilename;
 	private PrintWriter m_outputWriter;
-	private String comment;
-	private PowerManager pm;
-	private BatteryManager bm;
-	private final Handler updateHandler = new Handler();
+	private final String comment;
+	private final BatteryManager bm;
 	private Timer logTimer;
 	private TimerTask logTimerTask;
 	private TimerTask batteryTimerTask;
 	private TimerTask cellInfoTimerTask;
-	private GsmCellLocation gsmCellLocation;
-	private SignalStrength mSignalStrength;
 	private List<CellInfo> cellInfoList;
-	private Executor updateCellInfoExecutor;
+	private DatagramSocket s;
+	private InetAddress server;
+
+	private int batteryCount = 0;
+	private int averageBatAmp;
+	private int averageBatVolt;
+	private int currentBatVolt;
+	private int signalstrength, batvolt, batamp, cellId, lac = 0;
+	private double currentLatitude, currentLongitude, latitude, longitude = 0;
+	private final boolean gpsAndCellInfoMode;
+	private final boolean batteryMode;
+	private final boolean onePhoneSetup;
+	private boolean m_execute = true;
 
 	public ListenerThread(Service service, boolean onePhoneSetup, boolean GPS_mode, boolean battery_mode, String comment) {
 		super("ListenerThread");
@@ -84,14 +79,13 @@ public class ListenerThread extends Thread {
 		this.gpsAndCellInfoMode = GPS_mode;
 		this.batteryMode = battery_mode;
 		this.comment = comment;
-		
-		pm = (PowerManager) App.getAppContext().getSystemService(Context.POWER_SERVICE);
+
 		bm = (BatteryManager) App.getAppContext().getSystemService(Context.BATTERY_SERVICE);
 	}
 
 	@SuppressLint("Wakelock")
 	public void run() {
-		Log.d(Constants.TAG, "Starting Thread....");
+		Log.d(TAG, "Starting Thread....");
 		createOutputFile();
 		startListening();
 		//comment
@@ -119,14 +113,14 @@ public class ListenerThread extends Thread {
 			int i = 0;
 			do {
 				m_outputFilename = tmpText + LOG_EXT;
-				Log.d(Constants.TAG, "tmpText: " + tmpText);
+				Log.d(TAG, "tmpText: " + tmpText);
 				outputFile = new File(App.getAppContext().getExternalFilesDir(null) + "/", m_outputFilename);
 				++i;
 				tmpText = comment + "-" + i;
 			} while (outputFile.exists());
-			Log.d(Constants.TAG, outputFile.getAbsolutePath());
+			Log.d(TAG, outputFile.getAbsolutePath());
 		} catch (NullPointerException e) {
-			Log.e(Constants.TAG, e.getMessage());
+			Log.e(TAG, e.getMessage());
 			e.printStackTrace();
 		}
 		writeHeader();
@@ -136,13 +130,13 @@ public class ListenerThread extends Thread {
 		try {
 			if (m_outputWriter == null) {
 				m_outputWriter = new PrintWriter(new BufferedWriter(new FileWriter(App.getAppContext().getExternalFilesDir(null) + "/" + m_outputFilename, false)));
-				Log.d(Constants.TAG, "created outputWriter.");
+				Log.d(TAG, "created outputWriter.");
 			}
 			String str = "Time\tVolt\tCurrent\tSignal\tLatitude\tLongitude\tMCCMNC\tLAC\tCellID";
 			m_outputWriter.println(str);
 			m_outputWriter.flush();
 		} catch (IOException e) {
-			Log.v(Constants.TAG, e.getMessage());
+			Log.v(TAG, e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -150,7 +144,14 @@ public class ListenerThread extends Thread {
 	public void startListening() {
 		m_telephonyMgr = (TelephonyManager) m_service.getSystemService(Context.TELEPHONY_SERVICE);
 		mLocationManager = (LocationManager) m_service.getSystemService(BackgroundRecorder.LOCATION_SERVICE);
-		//gsmCellLocation = new GsmCellLocation();
+
+		try {
+			s = new DatagramSocket();
+			server = InetAddress.getByName(Constants.GOOGLE_DNS_SERVER);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 		logTimer = new Timer(true);
 
 		if (Build.VERSION.SDK_INT < 29) {
@@ -180,7 +181,7 @@ public class ListenerThread extends Thread {
 			mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_MIN_TIME, LOCATION_MIN_DISTANCE,
 					onLocationChange, Looper.getMainLooper());
 		} catch (SecurityException e) {
-			Log.e(Constants.TAG, e.getMessage());
+			Log.e(TAG, e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -193,10 +194,10 @@ public class ListenerThread extends Thread {
 			@Override
 			public void onReceive(Context context, Intent intent) {
 				currentBatVolt = intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
-				Log.d(Constants.TAG, "updated battery voltage.");
+				Log.d(TAG, "updated battery voltage.");
 			}
 		};
-		batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+		IntentFilter batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
 		App.getAppContext().registerReceiver(batteryReceiver, batteryFilter);
 	}
 
@@ -216,14 +217,14 @@ public class ListenerThread extends Thread {
 						m_telephonyMgr.requestCellInfoUpdate(App.getAppContext().getMainExecutor(), new TelephonyManager.CellInfoCallback() {
 							@Override
 							public void onCellInfo(@NonNull List<CellInfo> cellInfo) {
-								Log.d(Constants.TAG, "CellInfoCallback()");
+								Log.d(TAG, "CellInfoCallback()");
 								cellInfoList = cellInfo;
 								handleCellInfoList();
 							}
 						});
 					}
 				} catch (SecurityException e) {
-					Log.e(Constants.TAG, "getAllCellInfo() failed due to a SecurityException.");
+					Log.e(TAG, "getAllCellInfo() failed due to a SecurityException.");
 				}
 				latitude = currentLatitude;
 				longitude = currentLongitude;
@@ -236,25 +237,40 @@ public class ListenerThread extends Thread {
 		@Override
 		public void onCellInfoChanged(List<CellInfo> cellInfo) {
 			super.onCellInfoChanged(cellInfo);
-			Log.d(Constants.TAG, "onCellInfoChanged()");
+			Log.d(TAG, "onCellInfoChanged()");
 			cellInfoList = cellInfo;
 			handleCellInfoList();
 		}
 	};
 
 	/**
-	 * obtains latest amp of battery every second
-	 * and calculates average for the 10 sec interval
+	 * obtains latest amp of battery every second after
+	 * sending out a data package and calculates average
+	 * for the 10 sec interval
 	 */
 	public void startBatteryTimer() {
 		batteryTimerTask = new TimerTask() {
 			@Override
 			public void run() {
-				int currentBatAmp = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) / 1000;
-				Log.d(Constants.TAG, "current batamp: " + currentBatAmp);
-				batamp += currentBatAmp;
-				batvolt += currentBatVolt;
-				batteryCount++;
+				try {
+					//send data package and read out battery consumption
+					byte[] message = new byte[1000];
+					int currentBatAmp;
+					DatagramPacket p = new DatagramPacket(message, 1000, server, Constants.SERVER_PORT);
+					//long start = System.currentTimeMillis();
+					s.send(p);
+					currentBatAmp = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) / 1000;
+					//long stop = System.currentTimeMillis();
+					//Log.d(TAG, "elapsed time between start of sending and reading out battery stats: " + (stop - start));
+
+					//Update battery stats
+					batamp += currentBatAmp;
+					batvolt += currentBatVolt;
+					batteryCount++;
+				} catch (Exception e) {
+					Log.d(TAG, e.getMessage());
+					e.printStackTrace();
+				}
 				if (batteryCount % (10000 / Constants.READ_BATTERY_RATE) == 0) {
 					averageBatAmp = batamp / (10000 / Constants.READ_BATTERY_RATE);
 					averageBatVolt = batvolt / (10000 / Constants.READ_BATTERY_RATE);
@@ -270,24 +286,24 @@ public class ListenerThread extends Thread {
 		long currentTime = System.currentTimeMillis();
 		long startTime = (((System.currentTimeMillis() / 10000) + 1) * 10000) + startTimeDelay;
 		logTimer.scheduleAtFixedRate(task, startTime - currentTime, rate);
-		Log.d(Constants.TAG, "current time: " + currentTime + ", recording will start at " + startTime);
+		Log.d(TAG, "current time: " + currentTime + ", recording will start at " + startTime);
 	}
 
 	private void handleCellInfoList() {
-		Log.d(Constants.TAG, "in handleCellInfoList(), currentTime: " + System.currentTimeMillis());
+		Log.d(TAG, "in handleCellInfoList(), currentTime: " + System.currentTimeMillis());
 		for (CellInfo cell : cellInfoList) {
 			if (cell.isRegistered()) {
 				if (cell instanceof CellInfoLte) {
 					signalstrength = ((CellInfoLte) cell).getCellSignalStrength().getDbm();
 					lac = ((CellInfoLte) cell).getCellIdentity().getTac();
 					cellId = ((CellInfoLte) cell).getCellIdentity().getCi();
-					//Log.d(Constants.TAG, "timestamp: " + cell.getTimeStamp());
+					//Log.d(TAG, "timestamp: " + cell.getTimeStamp());
 				}
 				else if (cell instanceof CellInfoGsm) {
 					signalstrength = ((CellInfoGsm) cell).getCellSignalStrength().getDbm();
 					lac = ((CellInfoGsm) cell).getCellIdentity().getLac();
 					cellId = ((CellInfoGsm) cell).getCellIdentity().getCid();
-					//Log.d(Constants.TAG, "timestamp: " + cell.getTimeStamp());
+					//Log.d(TAG, "timestamp: " + cell.getTimeStamp());
 				}
 			}
 		}
@@ -311,7 +327,7 @@ public class ListenerThread extends Thread {
 
 	private void updateLog(boolean now)
 	{
-		Log.d(Constants.TAG, "updating log at " + System.currentTimeMillis());
+		Log.d(TAG, "updating log at " + System.currentTimeMillis());
 
 		long logTime;
 		if (now) {
@@ -322,7 +338,7 @@ public class ListenerThread extends Thread {
 		}
     	String record = "Time " + logTime + "\nVolt " + averageBatVolt + "\nAmp " + averageBatAmp +
 				"\nSignal strength " + signalstrength + "\nLatitude " + latitude +
-				"\nLongitude " + longitude + "\nMCCMNC " + mccmnc + "\nLAC " + lac +
+				"\nLongitude " + longitude + "\nMCCMNC " + Constants.MCCMNC + "\nLAC " + lac +
     			"\nCell ID " + cellId + ".";
 
 		//send record string to UI
@@ -339,7 +355,7 @@ public class ListenerThread extends Thread {
 
 	private String prepareLogLine(long currTime) {
 		return (currTime + "\t" + batvolt + "\t" + batamp + "\t" + signalstrength
-				+ "\t" + currentLatitude + "\t" + currentLongitude + "\t" + mccmnc + "\t" + lac + "\t" + cellId);
+				+ "\t" + currentLatitude + "\t" + currentLongitude + "\t" + Constants.MCCMNC + "\t" + lac + "\t" + cellId);
 	}
 
 	public LocationListener onLocationChange = new LocationListener() {
@@ -359,7 +375,7 @@ public class ListenerThread extends Thread {
 	};
 
 	public void quit() {
-		Log.d(Constants.TAG, "handling stop.");
+		Log.d(TAG, "handling stop.");
 		if (onePhoneSetup) {
 			m_telephonyMgr.listen(myPhoneStateListener, PhoneStateListener.LISTEN_NONE);
 			App.getAppContext().unregisterReceiver(batteryReceiver);

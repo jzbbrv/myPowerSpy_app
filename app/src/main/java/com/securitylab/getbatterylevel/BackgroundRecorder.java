@@ -62,12 +62,15 @@ public class BackgroundRecorder extends Service {
 		startListenerThread();
 		Log.d(Constants.TAG, "Started listener thread");
 
+		/*
 		if (cbOnePhoneSetup
 				|| cbBattery //comment out this line in battery mode to get battery consumption profile without any other running processes
 		) {
 			startNetworkThread();
 			Log.d(Constants.TAG, "Started network thread");
 		}
+		*/
+
 		m_running = true;
 		return START_REDELIVER_INTENT;
 	}
