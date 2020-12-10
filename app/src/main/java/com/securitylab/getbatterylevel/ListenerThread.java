@@ -164,7 +164,7 @@ public class ListenerThread extends Thread {
 			startCellAndGpsInfoTimer();
 			getBatteryUpdates();
 			startBatteryTimer();
-			startLogging(10000, false);
+			startLogging(10050, false);
 		} else if (gpsAndCellInfoMode) {
 			getLocationUpdates();
 			startCellAndGpsInfoTimer();
@@ -172,7 +172,7 @@ public class ListenerThread extends Thread {
 		} else if (batteryMode) {
 			getBatteryUpdates();
 			startBatteryTimer();
-			startLogging(10000, false);
+			startLogging(50, true);
 		}
 	}
 
@@ -193,7 +193,7 @@ public class ListenerThread extends Thread {
 		batteryReceiver = new BroadcastReceiver() {
 			@Override
 			public void onReceive(Context context, Intent intent) {
-				currentBatVolt = intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
+				batvolt = intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
 				Log.d(TAG, "updated battery voltage.");
 			}
 		};
@@ -253,30 +253,52 @@ public class ListenerThread extends Thread {
 			@Override
 			public void run() {
 				try {
-					int currentBatAmp;
+					//int currentBatAmp;
 					//send data package and read out battery consumption
 					byte[] message = new byte[1000];
 					DatagramPacket p = new DatagramPacket(message, 1000, server, Constants.SERVER_PORT);
 					s.send(p);
-					currentBatAmp = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) / 1000;
-					Log.d(TAG, "send data package and read battery: " + System.currentTimeMillis());
-					//Update battery stats
+					Log.d(TAG, "send data package at " + System.currentTimeMillis());
+					/*
+					batamp = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) / 1000;
 					batamp += currentBatAmp;
 					batvolt += currentBatVolt;
 					batteryCount++;
+					 */
 				} catch (Exception e) {
 					Log.d(TAG, e.getMessage());
 					e.printStackTrace();
 				}
+				/*
 				if (batteryCount % (10000 / Constants.READ_BATTERY_RATE) == 0) {
 					averageBatAmp = batamp / (10000 / Constants.READ_BATTERY_RATE);
 					averageBatVolt = batvolt / (10000 / Constants.READ_BATTERY_RATE);
 					batamp = 0;
 					batvolt = 0;
 				}
+
+				 */
 			}
 		};
 		startTimer(batteryTimerTask, 0 , Constants.READ_BATTERY_RATE);
+	}
+
+	/**
+	 * log latest position every 10 seconds, delay to decide when to log, either in middle
+	 * or at the end of each interval
+	 * @param delay of start
+	 * @param logTimeIsNow: true when logged at end of 10 interval, false if logged in the middle
+	 */
+	public void startLogging(int delay, final boolean logTimeIsNow) {
+		logTimerTask = new TimerTask() {
+			@Override
+			public void run() {
+				batamp = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) / 1000;
+				Log.d(TAG, "read battery at " + System.currentTimeMillis());
+				updateLog(logTimeIsNow);
+			}
+		};
+		startTimer(logTimerTask, delay, 10000);
 	}
 
 	public void startTimer(TimerTask task, int startTimeDelay, int rate) {
@@ -306,22 +328,6 @@ public class ListenerThread extends Thread {
 		}
 	}
 
-	/**
-	 * log latest position every 10 seconds, delay to decide when to log, either in middle
-	 * or at the end of each interval
-	 * @param delay of start
-	 * @param logTimeIsNow: true when logged at end of 10 interval, false if logged in the middle
-	 */
-	public void startLogging(int delay, final boolean logTimeIsNow) {
-		logTimerTask = new TimerTask() {
-			@Override
-			public void run() {
-				updateLog(logTimeIsNow);
-			}
-		};
-		startTimer(logTimerTask, delay, 10000);
-	}
-
 	private void updateLog(boolean now)
 	{
 		Log.d(TAG, "updating log at " + System.currentTimeMillis());
@@ -333,7 +339,7 @@ public class ListenerThread extends Thread {
 			//logs data collected in interval 0 to 10 sec at sec 10 with current time from 5 sec ago
 			logTime = System.currentTimeMillis() - 5000;
 		}
-    	String record = "Time " + logTime + "\nVolt " + averageBatVolt + "\nAmp " + averageBatAmp +
+    	String record = "Time " + logTime + "\nVolt " + batvolt + "\nAmp " + batamp +
 				"\nSignal strength " + signalstrength + "\nLatitude " + latitude +
 				"\nLongitude " + longitude + "\nMCCMNC " + Constants.MCCMNC + "\nLAC " + lac +
     			"\nCell ID " + cellId + ".";
