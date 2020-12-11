@@ -39,7 +39,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class ListenerThread extends Thread {
-	private static final int LOCATION_MIN_DISTANCE = 1;
+	private static final int LOCATION_MIN_DISTANCE = 10;
 	private static final int LOCATION_MIN_TIME = 500;
 	private static final int THREAD_SLEEP_TIME = 10;
 	private static final String LOG_EXT = ".csv";
@@ -55,8 +55,9 @@ public class ListenerThread extends Thread {
 	private final BatteryManager bm;
 	private Timer logTimer;
 	private TimerTask logTimerTask;
-	private TimerTask batteryTimerTask;
+	private TimerTask packageTimerTask;
 	private TimerTask cellInfoTimerTask;
+	private TimerTask batteryTimerTask;
 	private List<CellInfo> cellInfoList;
 	private DatagramSocket s;
 	private InetAddress server;
@@ -161,18 +162,20 @@ public class ListenerThread extends Thread {
 
 		if (onePhoneSetup) {
 			getLocationUpdates();
-			startCellAndGpsInfoTimer();
 			getBatteryUpdates();
-			startBatteryTimer();
-			startLogging(10050, false);
+			startCellAndGpsInfoTimer(0);
+			startPackageTimer();
+			startBatteryTimer(50);
+			startLoggingTimer(250, false);
 		} else if (gpsAndCellInfoMode) {
 			getLocationUpdates();
-			startCellAndGpsInfoTimer();
-			startLogging(5050, true);
+			startCellAndGpsInfoTimer(0);
+			startLoggingTimer(250, true);
 		} else if (batteryMode) {
 			getBatteryUpdates();
-			startBatteryTimer();
-			startLogging(50, true);
+			startPackageTimer();
+			startBatteryTimer(50);
+			startLoggingTimer(250, true);
 		}
 	}
 
@@ -201,7 +204,7 @@ public class ListenerThread extends Thread {
 		App.getAppContext().registerReceiver(batteryReceiver, batteryFilter);
 	}
 
-	public void startCellAndGpsInfoTimer() {
+	public void startCellAndGpsInfoTimer(int delay) {
 		cellInfoTimerTask = new TimerTask() {
 			@Override
 			public void run() {
@@ -230,7 +233,7 @@ public class ListenerThread extends Thread {
 				longitude = currentLongitude;
 			}
 		};
-		startTimer(cellInfoTimerTask, 5000, 10000);
+		startTimer(cellInfoTimerTask, delay, Constants.INTERVAL);
 	}
 
 	public PhoneStateListener myPhoneStateListener = new PhoneStateListener() {
@@ -244,32 +247,39 @@ public class ListenerThread extends Thread {
 	};
 
 	/**
-	 * obtains latest amp of battery every second after
-	 * sending out a data package and calculates average
-	 * for the 10 sec interval
+	 * sends out data package every 10 seconds to create dummy network traffic
 	 */
-	public void startBatteryTimer() {
-		batteryTimerTask = new TimerTask() {
+	public void startPackageTimer() {
+		byte[] message = new byte[1000];
+		final DatagramPacket p = new DatagramPacket(message, 1000, server, Constants.SERVER_PORT);
+
+		packageTimerTask = new TimerTask() {
 			@Override
 			public void run() {
 				try {
-					//int currentBatAmp;
-					//send data package and read out battery consumption
-					byte[] message = new byte[1000];
-					DatagramPacket p = new DatagramPacket(message, 1000, server, Constants.SERVER_PORT);
 					s.send(p);
 					Log.d(TAG, "send data package at " + System.currentTimeMillis());
-					/*
-					batamp = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) / 1000;
-					batamp += currentBatAmp;
-					batvolt += currentBatVolt;
-					batteryCount++;
-					 */
 				} catch (Exception e) {
 					Log.d(TAG, e.getMessage());
 					e.printStackTrace();
 				}
+
+			}
+		};
+		startTimer(packageTimerTask, 0 , Constants.INTERVAL);
+	}
+
+	public void startBatteryTimer(int delay) {
+		batteryTimerTask = new TimerTask() {
+			@Override
+			public void run() {
+				//int currentBatAmp;
+				batamp = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) / 1000;
+				Log.d(TAG, "read battery at " + System.currentTimeMillis());
 				/*
+				batamp += currentBatAmp;
+				batvolt += currentBatVolt;
+				batteryCount++;
 				if (batteryCount % (10000 / Constants.READ_BATTERY_RATE) == 0) {
 					averageBatAmp = batamp / (10000 / Constants.READ_BATTERY_RATE);
 					averageBatVolt = batvolt / (10000 / Constants.READ_BATTERY_RATE);
@@ -280,7 +290,7 @@ public class ListenerThread extends Thread {
 				 */
 			}
 		};
-		startTimer(batteryTimerTask, 0 , Constants.READ_BATTERY_RATE);
+		startTimer(batteryTimerTask, delay, Constants.INTERVAL);
 	}
 
 	/**
@@ -289,16 +299,14 @@ public class ListenerThread extends Thread {
 	 * @param delay of start
 	 * @param logTimeIsNow: true when logged at end of 10 interval, false if logged in the middle
 	 */
-	public void startLogging(int delay, final boolean logTimeIsNow) {
+	public void startLoggingTimer(int delay, final boolean logTimeIsNow) {
 		logTimerTask = new TimerTask() {
 			@Override
 			public void run() {
-				batamp = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) / 1000;
-				Log.d(TAG, "read battery at " + System.currentTimeMillis());
 				updateLog(logTimeIsNow);
 			}
 		};
-		startTimer(logTimerTask, delay, 10000);
+		startTimer(logTimerTask, delay, Constants.INTERVAL);
 	}
 
 	public void startTimer(TimerTask task, int startTimeDelay, int rate) {
@@ -382,17 +390,18 @@ public class ListenerThread extends Thread {
 		if (onePhoneSetup) {
 			m_telephonyMgr.listen(myPhoneStateListener, PhoneStateListener.LISTEN_NONE);
 			App.getAppContext().unregisterReceiver(batteryReceiver);
-			batteryTimerTask.cancel();
+			packageTimerTask.cancel();
 			cellInfoTimerTask.cancel();
 			logTimerTask.cancel();
+			batteryTimerTask.cancel();
 			batteryCount = 0;
 			mLocationManager.removeUpdates(onLocationChange);
-			logTimerTask.cancel();
 		} else if (batteryMode) {
 			m_telephonyMgr.listen(myPhoneStateListener, PhoneStateListener.LISTEN_NONE);
 			App.getAppContext().unregisterReceiver(batteryReceiver);
-			batteryTimerTask.cancel();
+			packageTimerTask.cancel();
 			logTimerTask.cancel();
+			batteryTimerTask.cancel();
 			batteryCount = 0;
 		} else if (gpsAndCellInfoMode) {
 			mLocationManager.removeUpdates(onLocationChange);

@@ -279,15 +279,23 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 	}
 
 	private void enableDisableControls(boolean enable) {
-		cbGPS.setEnabled(enable);
-		explainGPSMode.setEnabled(enable);
-		cbBattery.setEnabled(enable);
-		explainBatteryMode.setEnabled(enable);
-		m_commentTxt.setEnabled(enable);
-		cbOnePhoneSetup.setEnabled(enable);
-		explainOnePhoneSetupTextView.setEnabled(enable);
-		cbTwoPhoneSetup.setEnabled(enable);
-		explainTwoPhoneSetupTextView.setEnabled(enable);
+		if(enable) {
+			cbOnePhoneSetup.setEnabled(enable);
+			explainOnePhoneSetupTextView.setEnabled(enable);
+			cbTwoPhoneSetup.setEnabled(enable);
+			explainTwoPhoneSetupTextView.setEnabled(enable);
+			m_commentTxt.setEnabled(enable);
+		} else {
+			cbOnePhoneSetup.setEnabled(enable);
+			explainOnePhoneSetupTextView.setEnabled(enable);
+			cbTwoPhoneSetup.setEnabled(enable);
+			explainTwoPhoneSetupTextView.setEnabled(enable);
+			cbGPS.setEnabled(enable);
+			explainGPSMode.setEnabled(enable);
+			cbBattery.setEnabled(enable);
+			explainBatteryMode.setEnabled(enable);
+			m_commentTxt.setEnabled(enable);
+		}
 	}
 
 	public void checkLocationPermission() {
