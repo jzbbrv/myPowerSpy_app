@@ -90,6 +90,7 @@ public class ListenerThread extends Thread {
 		createOutputFile();
 		startListening();
 		//comment
+		/*
 		while (m_execute) {
 			try {
 				Thread.sleep(THREAD_SLEEP_TIME);
@@ -97,6 +98,7 @@ public class ListenerThread extends Thread {
 				m_execute = false;
 			}
 		}
+		 */
 	}
 
 	private void createOutputFile() {
@@ -174,8 +176,8 @@ public class ListenerThread extends Thread {
 		} else if (batteryMode) {
 			getBatteryUpdates();
 			startPackageTimer();
-			startBatteryTimer(50);
-			startLoggingTimer(250, true);
+			startBatteryTimer(5);
+			startLoggingTimer(100, true);
 		}
 	}
 
@@ -286,8 +288,7 @@ public class ListenerThread extends Thread {
 					batamp = 0;
 					batvolt = 0;
 				}
-
-				 */
+				*/
 			}
 		};
 		startTimer(batteryTimerTask, delay, Constants.INTERVAL);
