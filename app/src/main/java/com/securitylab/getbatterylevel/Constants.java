@@ -4,7 +4,9 @@ public class Constants {
 	// Hardware status files
 	public static final String TAG = "GetBatteryLevel";
 	public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
-	public static final int INTERVAL = 1000;
+	public static final int READ_INTERVAL = 1000;
+	public static final int SEND_INTERVAL = 1000;
+	public static final int LOG_INTERVAL = 1000;
 
 	//network constants
 	public static final String GOOGLE_DNS_SERVER = "8.8.8.8";

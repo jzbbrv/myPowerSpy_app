@@ -22,6 +22,7 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -235,7 +236,7 @@ public class ListenerThread extends Thread {
 				longitude = currentLongitude;
 			}
 		};
-		startTimer(cellInfoTimerTask, delay, Constants.INTERVAL);
+		startTimer(cellInfoTimerTask, delay, Constants.READ_INTERVAL);
 	}
 
 	public PhoneStateListener myPhoneStateListener = new PhoneStateListener() {
@@ -268,7 +269,7 @@ public class ListenerThread extends Thread {
 
 			}
 		};
-		startTimer(packageTimerTask, 0 , Constants.INTERVAL);
+		startTimer(packageTimerTask, 0 , Constants.SEND_INTERVAL);
 	}
 
 	public void startBatteryTimer(int delay) {
@@ -277,7 +278,6 @@ public class ListenerThread extends Thread {
 			public void run() {
 				//int currentBatAmp;
 				batamp = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) / 1000;
-				Log.d(TAG, "read battery at " + System.currentTimeMillis());
 				/*
 				batamp += currentBatAmp;
 				batvolt += currentBatVolt;
@@ -291,7 +291,7 @@ public class ListenerThread extends Thread {
 				*/
 			}
 		};
-		startTimer(batteryTimerTask, delay, Constants.INTERVAL);
+		startTimer(batteryTimerTask, delay, Constants.READ_INTERVAL);
 	}
 
 	/**
@@ -307,7 +307,7 @@ public class ListenerThread extends Thread {
 				updateLog(logTimeIsNow);
 			}
 		};
-		startTimer(logTimerTask, delay, Constants.INTERVAL);
+		startTimer(logTimerTask, delay, Constants.LOG_INTERVAL);
 	}
 
 	public void startTimer(TimerTask task, int startTimeDelay, int rate) {

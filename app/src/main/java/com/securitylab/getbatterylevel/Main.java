@@ -3,14 +3,17 @@ package com.securitylab.getbatterylevel;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -26,10 +29,12 @@ import androidx.core.content.ContextCompat;
 import java.lang.ref.WeakReference;
 
 import static com.securitylab.getbatterylevel.Constants.MY_PERMISSIONS_REQUEST_LOCATION;
+import static com.securitylab.getbatterylevel.Constants.TAG;
 
 public class Main extends Activity implements CompoundButton.OnCheckedChangeListener {
 	private static final String PREF_EXECUTION_STATUS = "ExecutionStatus";
 	private PowerManager.WakeLock wakeLock;
+	private PowerManager powerManager;
 	AlertDialog.Builder alertBuilder;
 
 	// time to wait before stopping the background service upon stop
@@ -71,7 +76,7 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+		powerManager = (PowerManager) getSystemService(POWER_SERVICE);
 		wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
 				"MyApp::MyWakelockTag");
 		
@@ -131,6 +136,7 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
     protected void onStart() {
 		super.onStart();
 		checkLocationPermission();
+		addToExemptionList();
 	}
 
 	private void cbGPS_listen() {
@@ -333,6 +339,29 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 		}
 		// Other 'case' lines to check for other
 		// permissions this app might request.
+	}
+
+	public void addToExemptionList() {
+		Log.d(TAG, "in addToExemptionList()");
+		String packageName = App.getAppContext().getPackageName();
+		if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setTitle(R.string.exemptionAlertTitle);
+			builder.setMessage(R.string.exemptionAlertMessage);
+			builder.setPositiveButton(R.string.opensettings, new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int id) {
+					Intent exemptionListIntent = new Intent();
+					exemptionListIntent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+					startActivity(exemptionListIntent);
+				}
+			});
+			builder.setNegativeButton(R.string.closeapp, new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int id) {
+					finish();
+				}
+			});
+			builder.show();
+		}
 	}
 
 	private boolean getExecutionStatus()
