@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">MyPowerSpy</string>
+    <string name="app_name">myPowerSpy</string>
     <string name="opensettings">Open settings</string>
     <string name="exemptionAlertTitle">Add application to exemption list</string>
     <string name="exemptionAlertMessage">For this app to work properly, it must be excluded from Android\'s battery optimizations. Please add MyPowerSpy to the exemption list.</string>

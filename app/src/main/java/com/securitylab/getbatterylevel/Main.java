@@ -248,7 +248,6 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 		}
 	}
 
-	// Start recording
 	private void start() {
 		//if GPS is required, check whether the phone's location services are enabled
 		if ((cbGPS.isChecked() || cbOnePhoneSetup.isChecked()) && !locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
