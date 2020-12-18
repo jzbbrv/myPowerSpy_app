@@ -8,6 +8,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -35,6 +36,7 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 	private static final String PREF_EXECUTION_STATUS = "ExecutionStatus";
 	private PowerManager.WakeLock wakeLock;
 	private PowerManager powerManager;
+	private LocationManager locationManager;
 	AlertDialog.Builder alertBuilder;
 
 	// time to wait before stopping the background service upon stop
@@ -77,6 +79,7 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
 				"MyApp::MyWakelockTag");
 		
@@ -129,7 +132,7 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
         m_inhandler = new IncomingHandler(this);
 	    m_startStopSwitch.setOnCheckedChangeListener(this);
 
-        Log.d(Constants.TAG, "App initialized.");
+	    Log.d(Constants.TAG, "App initialized.");
     }
 
     @Override
@@ -247,22 +250,35 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 
 	// Start recording
 	private void start() {
-		//disable all controls
-		enableDisableControls(false);
+		//if GPS is required, check whether the phone's location services are enabled
+		if ((cbGPS.isChecked() || cbOnePhoneSetup.isChecked()) && !locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+			m_startStopSwitch.setChecked(false);
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setTitle(R.string.locationAlertTitle);
+			builder.setMessage(R.string.locationAlertMessage);
+			builder.setPositiveButton(R.string.opensettings, new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int id) {
+					Intent locationIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+					startActivity(locationIntent);
+				}
+			});
+			builder.setNegativeButton(R.string.cancel, null);
+			builder.show();
+		} else {
+			enableDisableControls(false);
+			wakeLock.acquire(Constants.WAKE_LOCK_TIMEOUT);
+			Log.d(Constants.TAG, "wakeLock locked.");
+			startService();
+		}
+	}
 
-		//when app is on exemption list (excluded from battery optimization), partial wake lock ensures that CPU keeps running
-		wakeLock.acquire(Constants.WAKE_LOCK_TIMEOUT);
-		Log.d(Constants.TAG, "wakeLock locked.");
-
-        //activateDoubleTapListener();
-
+	public void startService() {
 		// Send command to background service with user's mode selection + comment
 		Intent startRecIntent = new Intent(App.getAppContext(), BackgroundRecorder.class);
 		startRecIntent.putExtra(Constants.EXTRA_ONEPHONE, cbOnePhoneSetup.isChecked());
 		startRecIntent.putExtra(Constants.EXTRA_GPS, cbGPS.isChecked());
 		startRecIntent.putExtra(Constants.EXTRA_BATTERY, cbBattery.isChecked());
 		startRecIntent.putExtra(Constants.EXTRA_COMMENT, m_commentTxt.getText().toString());
-
 		App.getAppContext().startService(startRecIntent);
 	}
 

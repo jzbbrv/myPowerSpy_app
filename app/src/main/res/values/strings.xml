@@ -3,7 +3,10 @@
     <string name="opensettings">Open settings</string>
     <string name="exemptionAlertTitle">Add application to exemption list</string>
     <string name="exemptionAlertMessage">For this app to work properly, it must be excluded from Android\'s battery optimizations. Please add MyPowerSpy to the exemption list.</string>
+    <string name="locationAlertTitle">Enable location services</string>
+    <string name="locationAlertMessage">This mode must access your location. Please enable the phone\'s location services and restart the recording.</string>
     <string name="closeapp">Close app</string>
+    <string name="cancel">Cancel</string>
     <string name="notification_title">MyPowerSpy is recording &#8230;</string>
     <string name="notification_text">Tap to open MyPowerSpy</string>
     <string name="notification_channel_name">notification channel</string>
