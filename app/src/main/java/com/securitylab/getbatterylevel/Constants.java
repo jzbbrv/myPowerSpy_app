@@ -11,7 +11,8 @@ public class Constants {
 	//network constants
 	public static final String GOOGLE_DNS_SERVER = "8.8.8.8";
 	public static final int SERVER_PORT = 53;
-	public static final int MCCMNC = 26201;
+	public static final String CELLTYPEGSM = "GSM";
+	public static final String CELLTYPELTE = "LTE";
 
 	//keep wakelock active for max. 1 hour
 	public static final long WAKE_LOCK_TIMEOUT = 3600000;

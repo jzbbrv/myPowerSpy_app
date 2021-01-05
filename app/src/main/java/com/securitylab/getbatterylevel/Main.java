@@ -10,6 +10,7 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -320,12 +321,22 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 	}
 
 	public void checkLocationPermission() {
-		if (ContextCompat.checkSelfPermission(this,
-				Manifest.permission.ACCESS_FINE_LOCATION)
-				!= PackageManager.PERMISSION_GRANTED) {
-			Log.d(Constants.TAG, "requesting location permission.");
-			requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-					MY_PERMISSIONS_REQUEST_LOCATION);
+		if (Build.VERSION.SDK_INT > 28) {
+			if (ContextCompat.checkSelfPermission(this,
+					Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+					!= PackageManager.PERMISSION_GRANTED) {
+				Log.d(Constants.TAG, "requesting location permission.");
+				requestPermissions(new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION},
+						MY_PERMISSIONS_REQUEST_LOCATION);
+			}
+		} else {
+			if (ContextCompat.checkSelfPermission(this,
+					Manifest.permission.ACCESS_FINE_LOCATION)
+					!= PackageManager.PERMISSION_GRANTED) {
+				Log.d(Constants.TAG, "requesting location permission.");
+				requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+						MY_PERMISSIONS_REQUEST_LOCATION);
+			}
 		}
 	}
 
@@ -342,7 +353,7 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 					alertBuilder
 							.setTitle("Location Access Required")
 							.setMessage(R.string.permission_explanation)
-							.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+							.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 								@Override
 								public void onClick(DialogInterface dialogInterface, int i) {
 									finish();

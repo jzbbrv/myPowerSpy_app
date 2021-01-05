@@ -22,8 +22,6 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -42,7 +40,6 @@ import java.util.TimerTask;
 public class ListenerThread extends Thread {
 	private static final int LOCATION_MIN_DISTANCE = 10;
 	private static final int LOCATION_MIN_TIME = 500;
-	private static final int THREAD_SLEEP_TIME = 10;
 	private static final String LOG_EXT = ".csv";
 	private static final String TAG = "ListenerThread";
 
@@ -63,16 +60,12 @@ public class ListenerThread extends Thread {
 	private DatagramSocket s;
 	private InetAddress server;
 
-	private int batteryCount = 0;
-	private int averageBatAmp;
-	private int averageBatVolt;
-	private int currentBatVolt;
-	private int signalstrength, batvolt, batamp, cellId, lac = 0;
+	private String celltype;
+	private int signalstrength, batvolt, batamp, cellId, lac, mcc, mnc = 0;
 	private double currentLatitude, currentLongitude, latitude, longitude = 0;
 	private final boolean gpsAndCellInfoMode;
 	private final boolean batteryMode;
 	private final boolean onePhoneSetup;
-	private boolean m_execute = true;
 
 	public ListenerThread(Service service, boolean onePhoneSetup, boolean GPS_mode, boolean battery_mode, String comment) {
 		super("ListenerThread");
@@ -136,7 +129,7 @@ public class ListenerThread extends Thread {
 				m_outputWriter = new PrintWriter(new BufferedWriter(new FileWriter(App.getAppContext().getExternalFilesDir(null) + "/" + m_outputFilename, false)));
 				Log.d(TAG, "created outputWriter.");
 			}
-			String str = "Time\tVolt\tCurrent\tSignal\tLatitude\tLongitude\tMCCMNC\tLAC\tCellID";
+			String str = "Time\tVolt\tCurrent\tSignal\tLatitude\tLongitude\tCellType\tMCC\tMNC\tLAC\tCellID";
 			m_outputWriter.println(str);
 			m_outputWriter.flush();
 		} catch (IOException e) {
@@ -323,14 +316,20 @@ public class ListenerThread extends Thread {
 			if (cell.isRegistered()) {
 				if (cell instanceof CellInfoLte) {
 					signalstrength = ((CellInfoLte) cell).getCellSignalStrength().getDbm();
+					celltype = Constants.CELLTYPELTE;
 					lac = ((CellInfoLte) cell).getCellIdentity().getTac();
 					cellId = ((CellInfoLte) cell).getCellIdentity().getCi();
+					mcc = Integer.parseInt(((CellInfoLte) cell).getCellIdentity().getMccString());
+					mnc = Integer.parseInt(((CellInfoLte) cell).getCellIdentity().getMncString());
 					//Log.d(TAG, "timestamp: " + cell.getTimeStamp());
 				}
 				else if (cell instanceof CellInfoGsm) {
 					signalstrength = ((CellInfoGsm) cell).getCellSignalStrength().getDbm();
+					celltype = Constants.CELLTYPEGSM;
 					lac = ((CellInfoGsm) cell).getCellIdentity().getLac();
 					cellId = ((CellInfoGsm) cell).getCellIdentity().getCid();
+					mcc = Integer.parseInt(((CellInfoGsm) cell).getCellIdentity().getMccString());
+					mnc = Integer.parseInt(((CellInfoGsm) cell).getCellIdentity().getMncString());
 					//Log.d(TAG, "timestamp: " + cell.getTimeStamp());
 				}
 			}
@@ -348,10 +347,10 @@ public class ListenerThread extends Thread {
 			//logs data collected in interval 0 to 10 sec at sec 10 with current time from 5 sec ago
 			logTime = System.currentTimeMillis() - 5000;
 		}
-    	String record = "Time " + logTime + "\nVolt " + batvolt + "\nAmp " + batamp +
-				"\nSignal strength " + signalstrength + "\nLatitude " + latitude +
-				"\nLongitude " + longitude + "\nMCCMNC " + Constants.MCCMNC + "\nLAC " + lac +
-    			"\nCell ID " + cellId + ".";
+    	String record = "Time: " + logTime + "\nVolt: " + batvolt + "\nAmp: " + batamp +
+				"\nSignal strength: " + signalstrength + "\nLatitude: " + latitude +
+				"\nLongitude: " + longitude + "\nCellType: " + celltype + "\nID: " + mcc + " " + mnc + " " + lac +
+    			" " + cellId + ".";
 
 		//send record string to UI
 		Message msg = Message.obtain();
@@ -367,7 +366,7 @@ public class ListenerThread extends Thread {
 
 	private String prepareLogLine(long currTime) {
 		return (currTime + "\t" + batvolt + "\t" + batamp + "\t" + signalstrength
-				+ "\t" + currentLatitude + "\t" + currentLongitude + "\t" + Constants.MCCMNC + "\t" + lac + "\t" + cellId);
+				+ "\t" + currentLatitude + "\t" + currentLongitude + "\t" + celltype + "\t" + mcc + "\t" + mnc + "\t" + lac + "\t" + cellId);
 	}
 
 	public LocationListener onLocationChange = new LocationListener() {
@@ -395,7 +394,6 @@ public class ListenerThread extends Thread {
 			cellInfoTimerTask.cancel();
 			logTimerTask.cancel();
 			batteryTimerTask.cancel();
-			batteryCount = 0;
 			mLocationManager.removeUpdates(onLocationChange);
 		} else if (batteryMode) {
 			m_telephonyMgr.listen(myPhoneStateListener, PhoneStateListener.LISTEN_NONE);
@@ -403,7 +401,6 @@ public class ListenerThread extends Thread {
 			packageTimerTask.cancel();
 			logTimerTask.cancel();
 			batteryTimerTask.cancel();
-			batteryCount = 0;
 		} else if (gpsAndCellInfoMode) {
 			mLocationManager.removeUpdates(onLocationChange);
 			cellInfoTimerTask.cancel();
@@ -413,6 +410,5 @@ public class ListenerThread extends Thread {
 			m_outputWriter.close();
 			m_outputWriter = null;
 		}
-		m_execute = false;
 	}
 }
