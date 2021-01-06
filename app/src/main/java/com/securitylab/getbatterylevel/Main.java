@@ -59,6 +59,8 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 	
 	// Receives messages from the background service
 	protected static IncomingHandler m_inhandler;
+
+	private boolean isExemptionDialogShown = false;
 	
 	private ServiceConnection m_serviceConnection;
 
@@ -133,15 +135,11 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
         m_inhandler = new IncomingHandler(this);
 	    m_startStopSwitch.setOnCheckedChangeListener(this);
 
-	    Log.d(Constants.TAG, "App initialized.");
-    }
-
-    @Override
-    protected void onStart() {
-		super.onStart();
 		checkLocationPermission();
 		addToExemptionList();
-	}
+
+	    Log.d(Constants.TAG, "App initialized.");
+    }
 
 	private void cbGPS_listen() {
 		cbGPS.setOnClickListener(new View.OnClickListener() {
@@ -217,21 +215,6 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 			}
 		});
 	}
-
-	/*
-	public void filesButton_listen() {
-		filesButton.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				Intent openFileIntent = new Intent();
-				openFileIntent.setAction(Intent.ACTION_GET_CONTENT);
-				openFileIntent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
-				openFileIntent.setType("/" + App.getAppContext().getExternalFilesDir(null));
-				startActivity(Intent.createChooser(openFileIntent, "Open folder"));
-			}
-		});
-	}
-	*/
 
 	@Override
 	public void onCheckedChanged(CompoundButton btnView, boolean isChecked)
@@ -343,25 +326,31 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 	@Override
 	public void onRequestPermissionsResult(int requestCode, String[] permissions,
 										   int[] grantResults) {
-		switch (requestCode) {
-			case MY_PERMISSIONS_REQUEST_LOCATION:
-				// If request is cancelled, the result arrays are empty.
-				if (grantResults.length > 0 &&
-						grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-					Toast.makeText(App.getAppContext(), R.string.permission_granted, Toast.LENGTH_LONG).show();
-				}  else {
-					alertBuilder
-							.setTitle("Location Access Required")
-							.setMessage(R.string.permission_explanation)
-							.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialogInterface, int i) {
-									finish();
-								}
-							})
-							.create()
-							.show();
-				}
+		if (requestCode == MY_PERMISSIONS_REQUEST_LOCATION) {// If request is cancelled, the result arrays are empty.
+			if (grantResults.length > 0 &&
+					grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+				Toast.makeText(App.getAppContext(), R.string.permission_granted, Toast.LENGTH_LONG).show();
+			} else {
+				alertBuilder
+						.setTitle("Location Access Required")
+						.setMessage(R.string.permission_explanation)
+						.setPositiveButton("Open settings", new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialogInterface, int i) {
+								Intent exemptionListIntent = new Intent();
+								exemptionListIntent.setAction(Settings.ACTION_APPLICATION_SETTINGS);
+								startActivity(exemptionListIntent);
+							}
+						})
+						.setNegativeButton(R.string.closeapp, new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int id) {
+								finish();
+							}
+						})
+						.setCancelable(false)
+						.create()
+						.show();
+			}
 		}
 		// Other 'case' lines to check for other
 		// permissions this app might request.
@@ -370,14 +359,17 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 	public void addToExemptionList() {
 		Log.d(TAG, "in addToExemptionList()");
 		String packageName = App.getAppContext().getPackageName();
-		if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
+		Log.d(TAG, "isIgnoringBatteryOptimizations: " + powerManager.isIgnoringBatteryOptimizations(packageName));
+		if (!powerManager.isIgnoringBatteryOptimizations(packageName) && !isExemptionDialogShown) {
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder.setTitle(R.string.exemptionAlertTitle);
 			builder.setMessage(R.string.exemptionAlertMessage);
-			builder.setPositiveButton(R.string.opensettings, new DialogInterface.OnClickListener() {
+			builder.setPositiveButton(R.string.okay, new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int id) {
 					Intent exemptionListIntent = new Intent();
-					exemptionListIntent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+					exemptionListIntent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+					exemptionListIntent.setData(Uri.parse("package:" + App.getAppContext().getPackageName()));
+					Log.d(TAG, "package:" + App.getAppContext().getPackageName());
 					startActivity(exemptionListIntent);
 				}
 			});
@@ -386,6 +378,7 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 					finish();
 				}
 			});
+			builder.setCancelable(false);
 			builder.show();
 		}
 	}

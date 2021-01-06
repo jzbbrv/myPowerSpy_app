@@ -16,7 +16,7 @@
         android:layout_marginTop="20dp"
         android:layout_marginEnd="40dp"
         android:layout_marginBottom="40dp"
-        android:text="..." />
+        android:text="@string/dots" />
 
     <Switch
         android:id="@+id/start_stop_switch"
@@ -26,7 +26,7 @@
         android:layout_alignStart="@+id/textView"
         android:layout_alignEnd="@+id/textView"
         android:layout_marginTop="20dp"
-        android:text="Record data"
+        android:text="@string/recordData"
         tools:ignore="UseSwitchCompatOrMaterialXml" />
 
     <EditText
@@ -41,7 +41,9 @@
         android:layout_marginTop="5dp"
         android:layout_marginEnd="0dp"
         android:ems="10"
-        android:inputType="text">
+        android:inputType="text"
+        android:autofillHints=""
+        tools:ignore="LabelFor">
 
         <requestFocus />
     </EditText>
@@ -54,7 +56,7 @@
         android:layout_alignStart="@+id/liveView"
         android:layout_marginStart="0dp"
         android:layout_marginTop="25dp"
-        android:text="add comment to csv-file" />
+        android:text="@string/Comment" />
 
     <TextView
         android:id="@+id/textView"
@@ -66,7 +68,7 @@
         android:layout_marginStart="40dp"
         android:layout_marginTop="40dp"
         android:layout_marginEnd="40dp"
-        android:text="myPowerSpy"
+        android:text="@string/myPowerSpy"
         android:textColor="#ffffff"
         android:textSize="25sp"
         android:textStyle="bold" />
@@ -81,7 +83,7 @@
         android:layout_marginStart="0dp"
         android:layout_marginTop="0dp"
         android:layout_marginEnd="0dp"
-        android:text="logs the phone's location, received signal strength and the currently connected base station. Do not turn off the screen while using this mode." />
+        android:text="@string/explainGpsMode"/>
 
     <CheckBox
         android:id="@+id/gpsCheckBox"
@@ -93,7 +95,7 @@
         android:layout_marginTop="10dp"
         android:checked="true"
         android:enabled="true"
-        android:text="GPS and network mode" />
+        android:text="@string/gpsAndNetworkMode" />
 
     <CheckBox
         android:id="@+id/signalCheckBox"
@@ -104,7 +106,7 @@
         android:layout_marginStart="25dp"
         android:layout_marginTop="10dp"
         android:checked="true"
-        android:text="battery mode" />
+        android:text="@string/batteryMode" />
 
     <TextView
         android:id="@+id/explainBatteryMode"
@@ -116,7 +118,7 @@
         android:layout_marginStart="0dp"
         android:layout_marginTop="0dp"
         android:layout_marginEnd="0dp"
-        android:text="logs battery consumption while sending data." />
+        android:text="@string/explainBatteryMode" />
 
     <CheckBox
         android:id="@+id/cbOnePhoneSetup"
@@ -126,7 +128,7 @@
         android:layout_alignStart="@+id/start_stop_switch"
         android:layout_marginStart="0dp"
         android:layout_marginTop="15dp"
-        android:text="one-phone setup" />
+        android:text="@string/onePhoneSetup" />
 
     <CheckBox
         android:id="@+id/cbTwoPhoneSetup"
@@ -136,7 +138,7 @@
         android:layout_alignStart="@+id/cbOnePhoneSetup"
         android:layout_marginStart="0dp"
         android:layout_marginTop="15dp"
-        android:text="two-phone setup" />
+        android:text="@string/twoPhoneSetup" />
 
     <TextView
         android:id="@+id/explainOnePhoneSetupTextView"
@@ -148,7 +150,7 @@
         android:layout_marginStart="0dp"
         android:layout_marginTop="0dp"
         android:layout_marginEnd="0dp"
-        android:text="collects all data on one phone. Do not lock the phone or leave the app while using this setup." />
+        android:text="@string/explain1PhoneSetup" />
 
     <TextView
         android:id="@+id/explainTwoPhoneSetupTextView"
@@ -160,6 +162,6 @@
         android:layout_marginStart="0dp"
         android:layout_marginTop="0dp"
         android:layout_marginEnd="0dp"
-        android:text="run each of the following modes on one phone." />
+        android:text="@string/explain2PhoneSetup" />
 
 </RelativeLayout>

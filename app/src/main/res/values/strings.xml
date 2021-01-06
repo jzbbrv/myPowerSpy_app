@@ -2,7 +2,7 @@
     <string name="app_name">myPowerSpy</string>
     <string name="opensettings">Open settings</string>
     <string name="exemptionAlertTitle">Add application to exemption list</string>
-    <string name="exemptionAlertMessage">For this app to work properly, it must be excluded from Android\'s battery optimizations. Please add MyPowerSpy to the exemption list.</string>
+    <string name="exemptionAlertMessage">For this app to work, it must be excluded from Android\'s battery optimizations. Please add MyPowerSpy to the exemption list in the phone\'s system settings.</string>
     <string name="locationAlertTitle">Enable location services</string>
     <string name="locationAlertMessage">This mode must access your location. Please enable the phone\'s location services and restart the recording.</string>
     <string name="closeapp">Close app</string>
@@ -13,5 +13,18 @@
     <string name="notification_channel_description">notification channel for BackgroundRecorder service</string>
     <string name="notification_id">notification</string>
     <string name="permission_granted">Permission granted.</string>
-    <string name="permission_explanation">"For this app to work, it must access your location. Please grant the corresponding permission when launching MyPowerSpy the next time. In case Android stops asking for permission, change the apps permissions in the phone's system settings."</string>
+    <string name="permission_explanation">"For this app to work, it must access your location. Please change the app\'s permissions in the phone\'s system settings."</string>
+    <string name="explain1PhoneSetup">Collects all data on one phone. Please do not lock the phone or leave the app.</string>
+    <string name="explain2PhoneSetup">Run each of the following modes on one phone.</string>
+    <string name="twoPhoneSetup">Two-phone setup</string>
+    <string name="onePhoneSetup">One-phone setup</string>
+    <string name="explainBatteryMode">Logs battery consumption while sending data.</string>
+    <string name="batteryMode">battery mode</string>
+    <string name="gpsAndNetworkMode">GPS and network mode</string>
+    <string name="explainGpsMode">Logs the phone\'s location, received signal strength and the currently connected cell tower. Please do not lock the phone or leave the app.</string>
+    <string name="myPowerSpy">myPowerSpy</string>
+    <string name="Comment">Add comment to csv-file</string>
+    <string name="recordData">Record data</string>
+    <string name="dots">...</string>
+    <string name="okay">Okay</string>
 </resources>
