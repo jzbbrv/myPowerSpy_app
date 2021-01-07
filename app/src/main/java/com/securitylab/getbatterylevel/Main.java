@@ -18,6 +18,7 @@ import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -251,6 +252,7 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
     }
 
     public void startService() {
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         // Send command to background service with user's mode selection + comment
         Intent startRecIntent = new Intent(App.getAppContext(), BackgroundRecorder.class);
         startRecIntent.putExtra(Constants.EXTRA_ONEPHONE, cbOnePhoneSetup.isChecked());
@@ -261,6 +263,7 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
     }
 
     private void stop() {
+        getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         enableDisableControls(true);
         cbOnePhoneSetup.setChecked(false);
         cbTwoPhoneSetup.setChecked(false);
