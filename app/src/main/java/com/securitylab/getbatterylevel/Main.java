@@ -26,6 +26,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import java.lang.ref.WeakReference;
@@ -113,7 +114,7 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
     protected void checkAppPermissions() {
         Log.d(TAG, "in checkPermissions()");
         if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
             checkLocationPermission();
         }
@@ -215,7 +216,7 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
     private void start() {
         //if GPS is required, check whether the phone's location services are enabled
         if (!powerManager.isIgnoringBatteryOptimizations(App.getAppContext().getPackageName()) | ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
             m_startStopSwitch.setChecked(false);
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -303,19 +304,19 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 
     public void checkLocationPermission() {
         Log.d(TAG, "in checkLocationPermission()");
-        if (Build.VERSION.SDK_INT > 28) {
-            if (ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED) {
-                Log.d(Constants.TAG, "requesting location permission.");
-                requestPermissions(new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION},
-                        MY_PERMISSIONS_REQUEST_LOCATION);
-            }
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)) {
+            Log.d(TAG, "shouldShowRequestPermissionRationale: true");
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle(R.string.locationRationale);
+            builder.setMessage(R.string.locationRationaleMessage);
+            builder.setPositiveButton(R.string.opensettings, null);
+            builder.show();
         } else {
             if (ContextCompat.checkSelfPermission(this,
                     Manifest.permission.ACCESS_FINE_LOCATION)
                     != PackageManager.PERMISSION_GRANTED) {
-                Log.d(Constants.TAG, "requesting location permission.");
+                Log.d(Constants.TAG, "requesting background location permission.");
                 requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                         MY_PERMISSIONS_REQUEST_LOCATION);
             }

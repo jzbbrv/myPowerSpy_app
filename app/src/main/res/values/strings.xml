@@ -7,6 +7,8 @@
     <string name="locationAlertMessage">This mode must access your location. Please enable the phone\'s location services and restart the recording.</string>
     <string name="permissionsMissing">Permissions missing</string>
     <string name="permissionsMissingMessage">Not all permission requirements are met. Please grant the missing permission(s) in the following prompt(s) and restart the recording.</string>
+    <string name="locationRationale">Permission to access your location</string>
+    <string name="locationRationaleMessage">This app relies on access to your location to record your current position as well as the connected cell tower. Please grant access to your location.</string>
     <string name="closeapp">Close app</string>
     <string name="cancel">Cancel</string>
     <string name="notification_title">MyPowerSpy is recording &#8230;</string>
