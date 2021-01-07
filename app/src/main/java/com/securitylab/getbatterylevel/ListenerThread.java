@@ -100,9 +100,15 @@ public class ListenerThread extends Thread {
         final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.GERMANY);
         final String currentDateandTime = sdf.format(new Date());
 
-        String fileName;
-        fileName = currentDateandTime;
-        fileName += "-" + Build.MANUFACTURER.toUpperCase() + "_" + Build.MODEL.toUpperCase();
+        String fileName = "";
+        if (this.onePhoneSetup) {
+            fileName = Constants.ONEPHONE + "-";
+        } else if (this.batteryMode) {
+            fileName = Constants.TWOPHONES_BAT + "-";
+        } else if (this.gpsAndCellInfoMode) {
+            fileName = Constants.TWOPHONES_INFO + "-";
+        }
+        fileName += currentDateandTime + "-" + Build.MANUFACTURER.toUpperCase() + "_" + Build.MODEL.toUpperCase();
         if (!comment.equals("")) {
             fileName += "-" + comment;
         }

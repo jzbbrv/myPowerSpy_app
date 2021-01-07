@@ -14,6 +14,11 @@ public class Constants {
 	public static final String CELLTYPEGSM = "GSM";
 	public static final String CELLTYPELTE = "LTE";
 
+	//mode selection constants
+	public static final String ONEPHONE = "ONE";
+	public static final String TWOPHONES_BAT = "TWO-BAT";
+	public static final String TWOPHONES_INFO = "TWO-INFO";
+
 	//keep wakelock active for max. 1 hour
 	public static final long WAKE_LOCK_TIMEOUT = 3600000;
 
