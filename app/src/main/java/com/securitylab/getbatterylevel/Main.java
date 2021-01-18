@@ -427,4 +427,9 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
             }
         }
     }
+
+    public void onDestroy() {
+        super.onDestroy();
+        stop();
+    }
 }

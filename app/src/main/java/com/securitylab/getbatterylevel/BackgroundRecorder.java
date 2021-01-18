@@ -6,6 +6,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -105,6 +106,9 @@ public class BackgroundRecorder extends Service {
 		PendingIntent pendingIntent =
 				PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
+		PackageManager pm = getPackageManager();
+		Intent launchIntent = pm.getLaunchIntentForPackage(getApplicationContext().getPackageName());
+		PendingIntent onTapIntent = PendingIntent.getActivity(this, 0, launchIntent, 0);
 		Notification notification =
 				new Notification.Builder(this, "BackgroundService")
 						.setContentTitle(getText(R.string.notification_title))
@@ -112,6 +116,7 @@ public class BackgroundRecorder extends Service {
 						.setSmallIcon(R.mipmap.ic_stat_onesignal_default)
 						.setContentIntent(pendingIntent)
 						.setTicker(getText(R.string.notification_text))
+						.setContentIntent(onTapIntent)
 						.build();
 
 		//start BackgroundRecorder as foreground service
@@ -121,6 +126,7 @@ public class BackgroundRecorder extends Service {
 	@Override
 	public void onDestroy() {
 		Log.d(Constants.TAG, "Service is quitting.");
+		stopForeground(true);
 
 		try {
 			if (m_listenerThread != null) {
