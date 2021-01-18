@@ -2,7 +2,7 @@
     <string name="app_name">myPowerSpy</string>
     <string name="opensettings">Open settings</string>
     <string name="exemptionAlertTitle">Add application to exemption list</string>
-    <string name="exemptionAlertMessage">To record data over a long period of time, this app must be able run in the background wihtout being killed by Android\'s battery optimizations. Please allow myPowerSpy to run in the background.</string>
+    <string name="exemptionAlertMessage">To record data over a long period of time, this app must be able run in the background without being killed by Android\'s battery optimizations. Please allow myPowerSpy to run in the background.</string>
     <string name="locationAlertTitle">Enable location services</string>
     <string name="locationAlertMessage">This mode must access your location. Please enable the phone\'s location services and restart the recording.</string>
     <string name="permissionsMissing">Permissions missing</string>
@@ -11,7 +11,7 @@
     <string name="locationRationaleMessage">This app relies on access to your location to record your current position as well as the connected cell tower. Please grant access to your location.</string>
     <string name="closeapp">Close app</string>
     <string name="cancel">Cancel</string>
-    <string name="notification_title">MyPowerSpy is recording &#8230;</string>
+    <string name="notification_title">myPowerSpy is recording &#8230;</string>
     <string name="notification_text">Tap to open MyPowerSpy</string>
     <string name="notification_channel_name">notification channel</string>
     <string name="notification_channel_description">notification channel for BackgroundRecorder service</string>
