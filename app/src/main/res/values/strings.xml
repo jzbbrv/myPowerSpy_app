@@ -12,7 +12,7 @@
     <string name="closeapp">Close app</string>
     <string name="cancel">Cancel</string>
     <string name="notification_title">myPowerSpy is recording &#8230;</string>
-    <string name="notification_text">Tap to open MyPowerSpy</string>
+    <string name="notification_text">Tap to open</string>
     <string name="notification_channel_name">notification channel</string>
     <string name="notification_channel_description">notification channel for BackgroundRecorder service</string>
     <string name="notification_id">notification</string>

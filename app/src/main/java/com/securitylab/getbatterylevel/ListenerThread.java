@@ -17,7 +17,6 @@ import android.os.Message;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
-import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
@@ -52,7 +51,6 @@ public class ListenerThread extends Thread {
     private PrintWriter m_outputWriter;
     private final String comment;
     private final BatteryManager bm;
-    private Timer logTimer;
     private TimerTask logTimerTask;
     private TimerTask packageTimerTask;
     private TimerTask cellInfoTimerTask;
@@ -158,12 +156,11 @@ public class ListenerThread extends Thread {
             e.printStackTrace();
         }
 
-        logTimer = new Timer(true);
-
+        /*
         if (Build.VERSION.SDK_INT < 29) {
-            m_telephonyMgr.listen(myPhoneStateListener,
-                    PhoneStateListener.LISTEN_CELL_INFO);
+            m_telephonyMgr.listen(myPhoneStateListener, PhoneStateListener.LISTEN_CELL_INFO);
         }
+        */
 
         if (onePhoneSetup) {
             getLocationUpdates();
@@ -217,10 +214,10 @@ public class ListenerThread extends Thread {
                     //lac = gsmCellLocation.getLac();
                     //cellId = gsmCellLocation.getCid();
                     if (Build.VERSION.SDK_INT < 29) {
-                        m_telephonyMgr.listen(myPhoneStateListener,
-                                PhoneStateListener.LISTEN_CELL_INFO);
+                        //m_telephonyMgr.listen(myPhoneStateListener, PhoneStateListener.LISTEN_CELL_INFO);
                         //request cell info, callback caught with myPhoneStateListener
-                        m_telephonyMgr.getAllCellInfo();
+                        cellInfoList = m_telephonyMgr.getAllCellInfo();
+                        handleCellInfoList();
                     } else {
                         m_telephonyMgr.requestCellInfoUpdate(App.getAppContext().getMainExecutor(), new TelephonyManager.CellInfoCallback() {
                             @Override
@@ -241,6 +238,7 @@ public class ListenerThread extends Thread {
         startTimer(cellInfoTimerTask, delay, Constants.READ_INTERVAL);
     }
 
+    /*
     public PhoneStateListener myPhoneStateListener = new PhoneStateListener() {
         @Override
         public void onCellInfoChanged(List<CellInfo> cellInfo) {
@@ -250,6 +248,7 @@ public class ListenerThread extends Thread {
             handleCellInfoList();
         }
     };
+     */
 
     /**
      * sends out data package every 10 seconds to create dummy network traffic
@@ -316,6 +315,7 @@ public class ListenerThread extends Thread {
     public void startTimer(TimerTask task, int startTimeDelay, int rate) {
         long currentTime = System.currentTimeMillis();
         long startTime = (((System.currentTimeMillis() / 10000) + 1) * 10000) + startTimeDelay;
+        Timer logTimer = new Timer(true);
         logTimer.scheduleAtFixedRate(task, startTime - currentTime, rate);
         Log.d(TAG, "current time: " + currentTime + ", recording will start at " + startTime);
     }
@@ -399,7 +399,7 @@ public class ListenerThread extends Thread {
     public void quit() {
         Log.d(TAG, "handling stop.");
         if (onePhoneSetup) {
-            m_telephonyMgr.listen(myPhoneStateListener, PhoneStateListener.LISTEN_NONE);
+            //m_telephonyMgr.listen(myPhoneStateListener, PhoneStateListener.LISTEN_NONE);
             App.getAppContext().unregisterReceiver(batteryReceiver);
             packageTimerTask.cancel();
             cellInfoTimerTask.cancel();
@@ -407,7 +407,7 @@ public class ListenerThread extends Thread {
             batteryTimerTask.cancel();
             mLocationManager.removeUpdates(onLocationChange);
         } else if (batteryMode) {
-            m_telephonyMgr.listen(myPhoneStateListener, PhoneStateListener.LISTEN_NONE);
+            //m_telephonyMgr.listen(myPhoneStateListener, PhoneStateListener.LISTEN_NONE);
             App.getAppContext().unregisterReceiver(batteryReceiver);
             packageTimerTask.cancel();
             logTimerTask.cancel();
