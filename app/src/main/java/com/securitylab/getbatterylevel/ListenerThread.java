@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutionException;
 
 public class ListenerThread extends Thread {
     private static final int LOCATION_MIN_DISTANCE = 10;
@@ -211,22 +212,25 @@ public class ListenerThread extends Thread {
             @Override
             public void run() {
                 try {
-                    //lac = gsmCellLocation.getLac();
-                    //cellId = gsmCellLocation.getCid();
                     if (Build.VERSION.SDK_INT < 29) {
-                        //m_telephonyMgr.listen(myPhoneStateListener, PhoneStateListener.LISTEN_CELL_INFO);
-                        //request cell info, callback caught with myPhoneStateListener
+                        //request cell info, cell info list returned
                         cellInfoList = m_telephonyMgr.getAllCellInfo();
                         handleCellInfoList();
                     } else {
-                        m_telephonyMgr.requestCellInfoUpdate(App.getAppContext().getMainExecutor(), new TelephonyManager.CellInfoCallback() {
-                            @Override
-                            public void onCellInfo(@NonNull List<CellInfo> cellInfo) {
-                                Log.d(TAG, "CellInfoCallback()");
-                                cellInfoList = cellInfo;
-                                handleCellInfoList();
-                            }
-                        });
+                        try {
+                            m_telephonyMgr.requestCellInfoUpdate(App.getAppContext().getMainExecutor(), new TelephonyManager.CellInfoCallback() {
+                                @Override
+                                public void onCellInfo(@NonNull List<CellInfo> cellInfo) {
+                                    Log.d(TAG, "CellInfoCallback()");
+                                    cellInfoList = cellInfo;
+                                    handleCellInfoList();
+                                }
+                            });
+                        } catch (Exception e) {
+                            // handle ClassNotFoundException on LineageOS
+                            cellInfoList = m_telephonyMgr.getAllCellInfo();
+                            handleCellInfoList();
+                        }
                     }
                 } catch (SecurityException e) {
                     Log.e(TAG, "getAllCellInfo() failed due to a SecurityException.");
