@@ -17,7 +17,11 @@ import android.os.Message;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
+import android.telephony.CellLocation;
+import android.telephony.PhoneStateListener;
+import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
+import android.telephony.gsm.GsmCellLocation;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -66,6 +70,7 @@ public class ListenerThread extends Thread {
     private final boolean gpsAndCellInfoMode;
     private final boolean batteryMode;
     private final boolean onePhoneSetup;
+    private boolean phoneStateListenerActive = false;
 
     public ListenerThread(Service service, boolean onePhoneSetup, boolean GPS_mode, boolean battery_mode, String comment) {
         super("ListenerThread");
@@ -213,11 +218,13 @@ public class ListenerThread extends Thread {
             public void run() {
                 try {
                     if (Build.VERSION.SDK_INT < 29) {
-                        //request cell info, cell info list returned
                         cellInfoList = m_telephonyMgr.getAllCellInfo();
-                        handleCellInfoList();
                     } else {
                         try {
+                            /*
+                             * on newer Android version calling getAllCellInfo does not invoke an update
+                             * in the returned cell info, call requestCellInfoUpdate instead
+                             */
                             m_telephonyMgr.requestCellInfoUpdate(App.getAppContext().getMainExecutor(), new TelephonyManager.CellInfoCallback() {
                                 @Override
                                 public void onCellInfo(@NonNull List<CellInfo> cellInfo) {
@@ -232,6 +239,25 @@ public class ListenerThread extends Thread {
                             handleCellInfoList();
                         }
                     }
+                    if (cellInfoList != null) {
+                        handleCellInfoList();
+                    } else {
+                        /*
+                         * In practice, some devices do not implement getAllCellInfo and
+                         * reqeustCellInfoUpdate. herefore, getCellLocation() is used instead.
+                         * CellLocation should return the serving cell, unless it is LTE (in which
+                         * case it should return null). In practice, however, some devices do return
+                         * LTE cells. Attention: As getCellLocation() is deprecated since API 26,
+                         * it might be removed in future Android versions. To retrieve signal
+                         * strength a PhoneStateListener is registered that listens for changes
+                         * in the received signal strength. Attention: As LISTEN_SIGNAL_STRENGTH is
+                         * deprecated, it might be removed in future Android versions.
+                         */
+                        m_telephonyMgr.listen(myPhoneStateListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTH);
+                        phoneStateListenerActive = true;
+                        CellLocation location = m_telephonyMgr.getCellLocation();
+                        handleCellLocation(location);
+                    }
                 } catch (SecurityException e) {
                     Log.e(TAG, "getAllCellInfo() failed due to a SecurityException.");
                 }
@@ -242,17 +268,14 @@ public class ListenerThread extends Thread {
         startTimer(cellInfoTimerTask, delay, Constants.READ_INTERVAL);
     }
 
-    /*
     public PhoneStateListener myPhoneStateListener = new PhoneStateListener() {
-        @Override
-        public void onCellInfoChanged(List<CellInfo> cellInfo) {
-            super.onCellInfoChanged(cellInfo);
-            Log.d(TAG, "onCellInfoChanged()");
-            cellInfoList = cellInfo;
-            handleCellInfoList();
+        public void onSignalStrengthsChanged(SignalStrength signalStrength) {
+            /*
+             * getGsmSignalStrength returns signal strength in ASU, convert to dBm
+             */
+            signalstrength = -113 + 2 * signalStrength.getGsmSignalStrength();
         }
     };
-     */
 
     /**
      * sends out data package every 10 seconds to create dummy network traffic
@@ -349,6 +372,18 @@ public class ListenerThread extends Thread {
         }
     }
 
+    public void handleCellLocation(CellLocation location) {
+        if (location instanceof GsmCellLocation) {
+            celltype = "LTE or GSM";
+            cellId = ((GsmCellLocation) location).getCid();
+            lac = ((GsmCellLocation) location).getLac();
+            // get MCC and MNC to identify used network
+            String networkOperator = m_telephonyMgr.getNetworkOperator();
+            mcc = Integer.parseInt(networkOperator.substring(0, 2));
+            mnc = Integer.parseInt(networkOperator.substring(2));
+        }
+    }
+
     private void updateLog(boolean now) {
         Log.d(TAG, "updating log at " + System.currentTimeMillis());
 
@@ -403,7 +438,10 @@ public class ListenerThread extends Thread {
     public void quit() {
         Log.d(TAG, "handling stop.");
         if (onePhoneSetup) {
-            //m_telephonyMgr.listen(myPhoneStateListener, PhoneStateListener.LISTEN_NONE);
+            if (phoneStateListenerActive) {
+                m_telephonyMgr.listen(myPhoneStateListener, PhoneStateListener.LISTEN_NONE);
+                phoneStateListenerActive = false;
+            }
             App.getAppContext().unregisterReceiver(batteryReceiver);
             packageTimerTask.cancel();
             cellInfoTimerTask.cancel();
@@ -411,7 +449,10 @@ public class ListenerThread extends Thread {
             batteryTimerTask.cancel();
             mLocationManager.removeUpdates(onLocationChange);
         } else if (batteryMode) {
-            //m_telephonyMgr.listen(myPhoneStateListener, PhoneStateListener.LISTEN_NONE);
+            if (phoneStateListenerActive) {
+                m_telephonyMgr.listen(myPhoneStateListener, PhoneStateListener.LISTEN_NONE);
+                phoneStateListenerActive = false;
+            }
             App.getAppContext().unregisterReceiver(batteryReceiver);
             packageTimerTask.cancel();
             logTimerTask.cancel();
