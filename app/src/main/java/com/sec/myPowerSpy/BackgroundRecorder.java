@@ -1,4 +1,4 @@
-package com.securitylab.getbatterylevel;
+package com.sec.myPowerSpy;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -13,6 +13,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 public class BackgroundRecorder extends Service {
+	private static final String TAG = "BackgroundRecorder";
 	private final IBinder m_binder = new BackgroundRecorderBinder();
 	private ListenerThread m_listenerThread;
 	private NetworkThread m_networkThread;
@@ -58,14 +59,14 @@ public class BackgroundRecorder extends Service {
 		comment = extras.getString(Constants.EXTRA_COMMENT);
 
 		startListenerThread();
-		Log.d(Constants.TAG, "Started listener thread");
+		Log.d(TAG, "Started listener thread");
 
 		/*
 		if (cbOnePhoneSetup
 				|| cbBattery //comment out this line in battery mode to get battery consumption profile without any other running processes
 		) {
 			startNetworkThread();
-			Log.d(Constants.TAG, "Started network thread");
+			Log.d(TAG, "Started network thread");
 		}
 		*/
 
@@ -84,7 +85,7 @@ public class BackgroundRecorder extends Service {
 		if (tm.getSimState() != TelephonyManager.SIM_STATE_ABSENT) {
 			m_networkThread = new NetworkThread();
 			m_networkThread.start();
-			Log.d(Constants.TAG, "Started Network thread");
+			Log.d(TAG, "Started Network thread");
 		}
 	}
 	*/
@@ -125,7 +126,7 @@ public class BackgroundRecorder extends Service {
 
 	@Override
 	public void onDestroy() {
-		Log.d(Constants.TAG, "Service is quitting.");
+		Log.d(TAG, "Service is quitting.");
 		stopForeground(true);
 
 		try {
@@ -138,7 +139,7 @@ public class BackgroundRecorder extends Service {
 				m_networkThread.join();
 			}
 		} catch (InterruptedException e) {
-			Log.e(Constants.TAG, "Waiting for threads interrupted");
+			Log.d(TAG, "Waiting for threads interrupted");
 			e.printStackTrace();
 		}
 		stopForeground(true);

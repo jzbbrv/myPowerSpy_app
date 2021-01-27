@@ -1,4 +1,4 @@
-package com.securitylab.getbatterylevel;
+package com.sec.myPowerSpy;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -9,6 +9,7 @@ import java.util.TimerTask;
 import android.util.Log;
 
 public class NetworkThread extends Thread {
+	private static final String TAG = "NetworkThread";
 	private static final String GOOGLE_DNS_SERVER = "8.8.8.8";
 	private static final int SERVER_PORT = 53;
 	private Timer networkTimer;
@@ -40,9 +41,9 @@ public class NetworkThread extends Thread {
 				try {
 					DatagramPacket p = new DatagramPacket(message, 1000, server, SERVER_PORT);
 					s.send(p);
-					Log.d(Constants.TAG, "send data package at: " + System.currentTimeMillis());
+					Log.d(TAG, "send data package at: " + System.currentTimeMillis());
 				} catch (Exception e) {
-					Log.d(Constants.TAG, e.getMessage());
+					Log.d(TAG, e.getMessage());
 					e.printStackTrace();
 				}
 			}

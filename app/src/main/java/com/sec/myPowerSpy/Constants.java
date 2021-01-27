@@ -1,8 +1,7 @@
-package com.securitylab.getbatterylevel;
+package com.sec.myPowerSpy;
 
 public class Constants {
 	// Hardware status files
-	public static final String TAG = "GetBatteryLevel";
 	public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
 	public static final int READ_INTERVAL = 1000;
 	public static final int SEND_INTERVAL = 1000;
@@ -11,6 +10,8 @@ public class Constants {
 	//network constants
 	public static final String GOOGLE_DNS_SERVER = "8.8.8.8";
 	public static final int SERVER_PORT = 53;
+	public static final String CELLTYPEWCDMA = "WCDMA";
+	public static final String CELLTYPECDMA = "CDMA";
 	public static final String CELLTYPEGSM = "GSM";
 	public static final String CELLTYPELTE = "LTE";
 

@@ -1,4 +1,4 @@
-package com.securitylab.getbatterylevel;
+package com.sec.myPowerSpy;
 
 import android.app.Application;
 import android.content.Context;

@@ -1,4 +1,4 @@
-package com.securitylab.getbatterylevel;
+package com.sec.myPowerSpy;
 
 import android.annotation.SuppressLint;
 import android.app.Service;
@@ -15,8 +15,10 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.os.Message;
 import android.telephony.CellInfo;
+import android.telephony.CellInfoCdma;
 import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
+import android.telephony.CellInfoWcdma;
 import android.telephony.CellLocation;
 import android.telephony.PhoneStateListener;
 import android.telephony.SignalStrength;
@@ -40,7 +42,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ExecutionException;
 
 public class ListenerThread extends Thread {
     private static final int LOCATION_MIN_DISTANCE = 10;
@@ -64,13 +65,14 @@ public class ListenerThread extends Thread {
     private DatagramSocket s;
     private InetAddress server;
 
-    private String celltype;
-    private int signalstrength, batvolt, batamp, cellId, lac, mcc, mnc = 0;
+    private String cellType;
+    private int signalstrength, batVolt, batAmp, mcc, mnc, lac, cellId, sysId, netId, baseId = 0;
     private double currentLatitude, currentLongitude, latitude, longitude = 0;
     private final boolean gpsAndCellInfoMode;
     private final boolean batteryMode;
     private final boolean onePhoneSetup;
     private boolean phoneStateListenerActive = false;
+    private boolean cellInfoNull = false;
 
     public ListenerThread(Service service, boolean onePhoneSetup, boolean GPS_mode, boolean battery_mode, String comment) {
         super("ListenerThread");
@@ -142,7 +144,7 @@ public class ListenerThread extends Thread {
                 m_outputWriter = new PrintWriter(new BufferedWriter(new FileWriter(App.getAppContext().getExternalFilesDir(null) + "/" + m_outputFilename, false)));
                 Log.d(TAG, "created outputWriter.");
             }
-            String str = "Time\tVolt\tCurrent\tSignal\tLatitude\tLongitude\tCellType\tMCC\tMNC\tLAC\tCellID";
+            String str = "Time\tVolt\tCurrent\tSignal\tLatitude\tLongitude\tCellType\tMCC\tMNC\tLAC\tCellID\tSysID\tNetID\tBaseID";
             m_outputWriter.println(str);
             m_outputWriter.flush();
         } catch (IOException e) {
@@ -204,7 +206,7 @@ public class ListenerThread extends Thread {
         batteryReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                batvolt = intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
+                batVolt = intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
                 Log.d(TAG, "updated battery voltage.");
             }
         };
@@ -213,54 +215,76 @@ public class ListenerThread extends Thread {
     }
 
     public void startCellAndGpsInfoTimer(int delay) {
+        cellType = "";
         cellInfoTimerTask = new TimerTask() {
             @Override
             public void run() {
                 try {
                     if (Build.VERSION.SDK_INT < 29) {
                         cellInfoList = m_telephonyMgr.getAllCellInfo();
-                    } else {
-                        try {
-                            /*
-                             * on newer Android version calling getAllCellInfo does not invoke an update
-                             * in the returned cell info, call requestCellInfoUpdate instead
-                             */
-                            m_telephonyMgr.requestCellInfoUpdate(App.getAppContext().getMainExecutor(), new TelephonyManager.CellInfoCallback() {
-                                @Override
-                                public void onCellInfo(@NonNull List<CellInfo> cellInfo) {
-                                    Log.d(TAG, "CellInfoCallback()");
-                                    cellInfoList = cellInfo;
-                                    handleCellInfoList();
-                                }
-                            });
-                        } catch (Exception e) {
-                            // handle ClassNotFoundException on LineageOS
-                            cellInfoList = m_telephonyMgr.getAllCellInfo();
+                        if (cellInfoList != null) {
                             handleCellInfoList();
+                            if (cellInfoNull) {
+                                cellInfoNull = false;
+                                m_telephonyMgr.listen(myPhoneStateListener, PhoneStateListener.LISTEN_NONE);
+                            }
+                        } else {
+                            cellInfoNull = true;
                         }
-                    }
-                    if (cellInfoList != null) {
-                        handleCellInfoList();
                     } else {
                         /*
-                         * In practice, some devices do not implement getAllCellInfo and
-                         * reqeustCellInfoUpdate. herefore, getCellLocation() is used instead.
+                         * on newer Android version calling getAllCellInfo does not invoke an update
+                         * in the returned cell info, call requestCellInfoUpdate instead
+                         */
+                        m_telephonyMgr.requestCellInfoUpdate(App.getAppContext().getMainExecutor(), new TelephonyManager.CellInfoCallback() {
+                            @Override
+                            public void onCellInfo(@NonNull List<CellInfo> cellInfo) {
+                                Log.d(TAG, "in onCellInfo()");
+                                cellInfoList = cellInfo;
+                                if (cellInfoList != null) {
+                                    handleCellInfoList();
+                                    if (cellInfoNull) {
+                                        cellInfoNull = false;
+                                        m_telephonyMgr.listen(myPhoneStateListener, PhoneStateListener.LISTEN_NONE);
+                                    }
+                                } else {
+                                    cellInfoNull = true;
+                                }
+                            }
+                        });
+                    }
+                    if (cellInfoNull) {
+                        /*
+                         * In practice, some devices do not implement getAllCellInfo() and
+                         * requestCellInfoUpdate(). Therefore, getCellLocation() is used instead.
                          * CellLocation should return the serving cell, unless it is LTE (in which
                          * case it should return null). In practice, however, some devices do return
                          * LTE cells. Attention: As getCellLocation() is deprecated since API 26,
                          * it might be removed in future Android versions. To retrieve signal
                          * strength a PhoneStateListener is registered that listens for changes
-                         * in the received signal strength. Attention: As LISTEN_SIGNAL_STRENGTH is
-                         * deprecated, it might be removed in future Android versions.
+                         * in the received signal strength.
                          */
-                        m_telephonyMgr.listen(myPhoneStateListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTH);
-                        phoneStateListenerActive = true;
+                        Log.d(TAG, "getAllCellInfo returned null, use deprecated methods");
+                        if (!phoneStateListenerActive) {
+                            m_telephonyMgr.listen(myPhoneStateListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+                            phoneStateListenerActive = true;
+                        }
                         CellLocation location = m_telephonyMgr.getCellLocation();
-                        handleCellLocation(location);
+                        if (location != null) {
+                            /*
+                             * fyi: for LTE connections, getCellLocation() mostly returns null. In practice,
+                             * however, this is not always the case.
+                             */
+                            handleCellLocation(location);
+                        }
                     }
                 } catch (SecurityException e) {
                     Log.e(TAG, "getAllCellInfo() failed due to a SecurityException.");
                 }
+                /*
+                 * currentLatitude is constantly updated by the location listener. Save current
+                 * position to get accurate location for retrieved network information
+                 */
                 latitude = currentLatitude;
                 longitude = currentLongitude;
             }
@@ -273,7 +297,8 @@ public class ListenerThread extends Thread {
             /*
              * getGsmSignalStrength returns signal strength in ASU, convert to dBm
              */
-            signalstrength = -113 + 2 * signalStrength.getGsmSignalStrength();
+            Log.d(TAG, "onSignalStrengthChanged(): " + signalStrength.getGsmSignalStrength());
+            signalstrength = (-113 + 2 * signalStrength.getGsmSignalStrength());
         }
     };
 
@@ -305,7 +330,7 @@ public class ListenerThread extends Thread {
             @Override
             public void run() {
                 //int currentBatAmp;
-                batamp = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) / 1000;
+                batAmp = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) / 1000;
 				/*
 				batamp += currentBatAmp;
 				batvolt += currentBatVolt;
@@ -349,38 +374,71 @@ public class ListenerThread extends Thread {
 
     private void handleCellInfoList() {
         Log.d(TAG, "in handleCellInfoList(), currentTime: " + System.currentTimeMillis());
-        for (CellInfo cell : cellInfoList) {
-            if (cell.isRegistered()) {
-                if (cell instanceof CellInfoLte) {
-                    signalstrength = ((CellInfoLte) cell).getCellSignalStrength().getDbm();
-                    celltype = Constants.CELLTYPELTE;
-                    lac = ((CellInfoLte) cell).getCellIdentity().getTac();
-                    cellId = ((CellInfoLte) cell).getCellIdentity().getCi();
-                    mcc = Integer.parseInt(((CellInfoLte) cell).getCellIdentity().getMccString());
-                    mnc = Integer.parseInt(((CellInfoLte) cell).getCellIdentity().getMncString());
-                    //Log.d(TAG, "timestamp: " + cell.getTimeStamp());
-                } else if (cell instanceof CellInfoGsm) {
-                    signalstrength = ((CellInfoGsm) cell).getCellSignalStrength().getDbm();
-                    celltype = Constants.CELLTYPEGSM;
-                    lac = ((CellInfoGsm) cell).getCellIdentity().getLac();
-                    cellId = ((CellInfoGsm) cell).getCellIdentity().getCid();
-                    mcc = Integer.parseInt(((CellInfoGsm) cell).getCellIdentity().getMccString());
-                    mnc = Integer.parseInt(((CellInfoGsm) cell).getCellIdentity().getMncString());
-                    //Log.d(TAG, "timestamp: " + cell.getTimeStamp());
+        Log.d(TAG, "cellInfoList: " + cellInfoList.toString());
+        try {
+            for (CellInfo cell : cellInfoList) {
+                if (cell.isRegistered()) {
+                    if (cell instanceof CellInfoLte) {
+                        if (cellType.equals(Constants.CELLTYPECDMA)) {
+                            // if switch from CDMA, set CDMA identifier to 0
+                            sysId = netId = baseId = 0;
+                        }
+                        cellType = Constants.CELLTYPELTE;
+                        mcc = Integer.parseInt(((CellInfoLte) cell).getCellIdentity().getMccString());
+                        mnc = Integer.parseInt(((CellInfoLte) cell).getCellIdentity().getMncString());
+                        lac = ((CellInfoLte) cell).getCellIdentity().getTac();
+                        cellId = ((CellInfoLte) cell).getCellIdentity().getCi();
+                        signalstrength = ((CellInfoLte) cell).getCellSignalStrength().getDbm();
+                    } else if (cell instanceof CellInfoGsm) {
+                        if (cellType.equals(Constants.CELLTYPECDMA)) {
+                            // if switch from CDMA, set CDMA identifier to 0
+                            sysId = netId = baseId = 0;
+                        }
+                        cellType = Constants.CELLTYPEGSM;
+                        mcc = Integer.parseInt(((CellInfoGsm) cell).getCellIdentity().getMccString());
+                        mnc = Integer.parseInt(((CellInfoGsm) cell).getCellIdentity().getMncString());
+                        lac = ((CellInfoGsm) cell).getCellIdentity().getLac();
+                        cellId = ((CellInfoGsm) cell).getCellIdentity().getCid();
+                        signalstrength = ((CellInfoGsm) cell).getCellSignalStrength().getDbm();
+                    } else if (cell instanceof CellInfoWcdma) {
+                        if (cellType.equals(Constants.CELLTYPECDMA)) {
+                            // if switch from CDMA, set CDMA identifier to 0
+                            sysId = netId = baseId = 0;
+                        }
+                        cellType = Constants.CELLTYPEWCDMA;
+                        mcc = Integer.parseInt(((CellInfoWcdma) cell).getCellIdentity().getMccString());
+                        mnc = Integer.parseInt(((CellInfoWcdma) cell).getCellIdentity().getMncString());
+                        lac = ((CellInfoWcdma) cell).getCellIdentity().getLac();
+                        cellId = ((CellInfoWcdma) cell).getCellIdentity().getCid();
+                        signalstrength = ((CellInfoWcdma) cell).getCellSignalStrength().getDbm();
+                    } else if (cell instanceof CellInfoCdma) {
+                        if (!cellType.equals(Constants.CELLTYPECDMA)) {
+                            // if switch to CDMA, set LTE, GSM and WCDMA identifiers to 0
+                            mcc = mnc = lac = cellId = 0;
+                        }
+                        cellType = Constants.CELLTYPECDMA;
+                        baseId = ((CellInfoCdma) cell).getCellIdentity().getBasestationId();
+                        netId = ((CellInfoCdma) cell).getCellIdentity().getNetworkId();
+                        baseId = ((CellInfoCdma) cell).getCellIdentity().getSystemId();
+                        signalstrength = ((CellInfoCdma) cell).getCellSignalStrength().getDbm();
+                    }
                 }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
     public void handleCellLocation(CellLocation location) {
+        Log.d(TAG, "in handleCellLocation");
         if (location instanceof GsmCellLocation) {
-            celltype = "LTE or GSM";
+            cellType = "LTE or GSM";
             cellId = ((GsmCellLocation) location).getCid();
             lac = ((GsmCellLocation) location).getLac();
             // get MCC and MNC to identify used network
             String networkOperator = m_telephonyMgr.getNetworkOperator();
-            mcc = Integer.parseInt(networkOperator.substring(0, 2));
-            mnc = Integer.parseInt(networkOperator.substring(2));
+            mcc = Integer.parseInt(networkOperator.substring(0, 3));
+            mnc = Integer.parseInt(networkOperator.substring(3));
         }
     }
 
@@ -394,10 +452,17 @@ public class ListenerThread extends Thread {
             //logs data collected in interval 0 to 10 sec at sec 10 with current time from 5 sec ago
             logTime = System.currentTimeMillis() - 5000;
         }
-        String record = "Time: " + logTime + "\nVolt: " + batvolt + "\nAmp: " + batamp +
-                "\nSignal strength: " + signalstrength + "\nLatitude: " + latitude +
-                "\nLongitude: " + longitude + "\nCellType: " + celltype + "\nID: " + mcc + " " + mnc + " " + lac +
-                " " + cellId + ".";
+        String record;
+        if (!cellType.equals("CDMA")) {
+            record = "Time: " + logTime + "\nVolt: " + batVolt + "\nAmp: " + batAmp +
+                    "\nSignal strength: " + signalstrength + "\nLatitude: " + latitude +
+                    "\nLongitude: " + longitude + "\nCellType: " + cellType + "\nID: " + mcc + " " + mnc + " " + lac +
+                    " " + cellId;
+        } else {
+            record = "Time: " + logTime + "\nVolt: " + batVolt + "\nAmp: " + batAmp +
+                    "\nSignal strength: " + signalstrength + "\nLatitude: " + latitude +
+                    "\nLongitude: " + longitude + "\nCellType: " + cellType + "\nID: " + sysId + " " + netId + " " + baseId;
+        }
 
         //send record string to UI
         Message msg = Message.obtain();
@@ -412,8 +477,10 @@ public class ListenerThread extends Thread {
     }
 
     private String prepareLogLine(long currTime) {
-        return (currTime + "\t" + batvolt + "\t" + batamp + "\t" + signalstrength
-                + "\t" + currentLatitude + "\t" + currentLongitude + "\t" + celltype + "\t" + mcc + "\t" + mnc + "\t" + lac + "\t" + cellId);
+        return (currTime + "\t" + batVolt + "\t" + batAmp + "\t" + signalstrength
+                + "\t" + currentLatitude + "\t" + currentLongitude + "\t" + cellType
+                + "\t" + mcc + "\t" + mnc + "\t" + lac + "\t" + cellId + "\t" + sysId
+                + "\t" + netId + "\t" + baseId);
     }
 
     public LocationListener onLocationChange = new LocationListener() {

@@ -1,4 +1,4 @@
-package com.securitylab.getbatterylevel;
+package com.sec.myPowerSpy;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -31,11 +30,11 @@ import androidx.core.content.ContextCompat;
 
 import java.lang.ref.WeakReference;
 
-import static com.securitylab.getbatterylevel.Constants.MY_PERMISSIONS_REQUEST_LOCATION;
-import static com.securitylab.getbatterylevel.Constants.TAG;
+import static com.sec.myPowerSpy.Constants.MY_PERMISSIONS_REQUEST_LOCATION;
 
 @SuppressLint("UseSwitchCompatOrMaterialCode")
 public class Main extends Activity implements CompoundButton.OnCheckedChangeListener {
+    private static final String TAG = "Main";
     private static final String PREF_EXECUTION_STATUS = "ExecutionStatus";
     private PowerManager.WakeLock wakeLock;
     private PowerManager powerManager;
@@ -108,7 +107,7 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 
         checkAppPermissions();
 
-        Log.d(Constants.TAG, "App initialized.");
+        Log.d(TAG, "App initialized.");
     }
 
     protected void checkAppPermissions() {
@@ -200,7 +199,7 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
 
     @Override
     public void onCheckedChanged(CompoundButton btnView, boolean isChecked) {
-        Log.d(Constants.TAG, String.format("Changed recording state to %s", isChecked ? "on" : "off"));
+        Log.d(TAG, String.format("Changed recording state to %s", isChecked ? "on" : "off"));
         if (isChecked) {
             if (cbBattery.isChecked() || cbGPS.isChecked() || cbOnePhoneSetup.isChecked()) {
                 start();
@@ -246,7 +245,7 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
             } else {
                 enableDisableControls(false);
                 wakeLock.acquire(Constants.WAKE_LOCK_TIMEOUT);
-                Log.d(Constants.TAG, "wakeLock locked.");
+                Log.d(TAG, "wakeLock locked.");
                 startService();
             }
         }
@@ -272,7 +271,7 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
         cbBattery.setChecked(false);
         wakeLock.release();
 
-        Log.d(Constants.TAG, "wakeLock released.");
+        Log.d(TAG, "wakeLock released.");
         Intent stopRecIntent = new Intent(App.getAppContext(), BackgroundRecorder.class);
         App.getAppContext().stopService(stopRecIntent);
         try {
@@ -316,7 +315,6 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
             if (ContextCompat.checkSelfPermission(this,
                     Manifest.permission.ACCESS_FINE_LOCATION)
                     != PackageManager.PERMISSION_GRANTED) {
-                Log.d(Constants.TAG, "requesting background location permission.");
                 requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                         MY_PERMISSIONS_REQUEST_LOCATION);
             }
@@ -408,7 +406,7 @@ public class Main extends Activity implements CompoundButton.OnCheckedChangeList
     }
 
     public void handleMessage(Message msg) {
-        Log.d(Constants.TAG, msg.obj.toString());
+        Log.d(TAG, msg.obj.toString());
         liveView.setText(msg.obj.toString());
     }
 
