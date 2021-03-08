@@ -14,6 +14,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.os.Message;
+import android.telephony.CellIdentityLte;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoCdma;
 import android.telephony.CellInfoGsm;
@@ -65,8 +66,9 @@ public class ListenerThread extends Thread {
     private DatagramSocket s;
     private InetAddress server;
 
-    private String cellType;
-    private int signalstrength, batVolt, batAmp, mcc, mnc, lac, cellId, sysId, netId, baseId = 0;
+    private String cellType = "";
+    private String mcc, mnc = Integer.toString(0);
+    private int signalstrength, batVolt, batAmp, lac, cellId, sysId, netId, baseId = 0;
     private double currentLatitude, currentLongitude, latitude, longitude = 0;
     private final boolean gpsAndCellInfoMode;
     private final boolean batteryMode;
@@ -176,7 +178,7 @@ public class ListenerThread extends Thread {
             startCellAndGpsInfoTimer(0);
             startPackageTimer();
             startBatteryTimer(50);
-            startLoggingTimer(250, false);
+            startLoggingTimer(250, true);
         } else if (gpsAndCellInfoMode) {
             getLocationUpdates();
             startCellAndGpsInfoTimer(0);
@@ -384,8 +386,8 @@ public class ListenerThread extends Thread {
                             sysId = netId = baseId = 0;
                         }
                         cellType = Constants.CELLTYPELTE;
-                        mcc = Integer.parseInt(((CellInfoLte) cell).getCellIdentity().getMccString());
-                        mnc = Integer.parseInt(((CellInfoLte) cell).getCellIdentity().getMncString());
+                        mcc = ((CellInfoLte) cell).getCellIdentity().getMccString();
+                        mnc = ((CellInfoLte) cell).getCellIdentity().getMncString();
                         lac = ((CellInfoLte) cell).getCellIdentity().getTac();
                         cellId = ((CellInfoLte) cell).getCellIdentity().getCi();
                         signalstrength = ((CellInfoLte) cell).getCellSignalStrength().getDbm();
@@ -395,8 +397,8 @@ public class ListenerThread extends Thread {
                             sysId = netId = baseId = 0;
                         }
                         cellType = Constants.CELLTYPEGSM;
-                        mcc = Integer.parseInt(((CellInfoGsm) cell).getCellIdentity().getMccString());
-                        mnc = Integer.parseInt(((CellInfoGsm) cell).getCellIdentity().getMncString());
+                        mcc = ((CellInfoGsm) cell).getCellIdentity().getMccString();
+                        mnc = ((CellInfoGsm) cell).getCellIdentity().getMncString();
                         lac = ((CellInfoGsm) cell).getCellIdentity().getLac();
                         cellId = ((CellInfoGsm) cell).getCellIdentity().getCid();
                         signalstrength = ((CellInfoGsm) cell).getCellSignalStrength().getDbm();
@@ -406,15 +408,16 @@ public class ListenerThread extends Thread {
                             sysId = netId = baseId = 0;
                         }
                         cellType = Constants.CELLTYPEWCDMA;
-                        mcc = Integer.parseInt(((CellInfoWcdma) cell).getCellIdentity().getMccString());
-                        mnc = Integer.parseInt(((CellInfoWcdma) cell).getCellIdentity().getMncString());
+                        mcc = ((CellInfoWcdma) cell).getCellIdentity().getMccString();
+                        mnc = ((CellInfoWcdma) cell).getCellIdentity().getMncString();
                         lac = ((CellInfoWcdma) cell).getCellIdentity().getLac();
                         cellId = ((CellInfoWcdma) cell).getCellIdentity().getCid();
                         signalstrength = ((CellInfoWcdma) cell).getCellSignalStrength().getDbm();
                     } else if (cell instanceof CellInfoCdma) {
                         if (!cellType.equals(Constants.CELLTYPECDMA)) {
                             // if switch to CDMA, set LTE, GSM and WCDMA identifiers to 0
-                            mcc = mnc = lac = cellId = 0;
+                            lac = cellId = 0;
+                            mcc = mnc = Integer.toString(0);
                         }
                         cellType = Constants.CELLTYPECDMA;
                         baseId = ((CellInfoCdma) cell).getCellIdentity().getBasestationId();
@@ -424,7 +427,7 @@ public class ListenerThread extends Thread {
                     }
                 }
             }
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
             e.printStackTrace();
         }
     }
@@ -437,8 +440,8 @@ public class ListenerThread extends Thread {
             lac = ((GsmCellLocation) location).getLac();
             // get MCC and MNC to identify used network
             String networkOperator = m_telephonyMgr.getNetworkOperator();
-            mcc = Integer.parseInt(networkOperator.substring(0, 3));
-            mnc = Integer.parseInt(networkOperator.substring(3));
+            mcc = networkOperator.substring(0, 3);
+            mnc = networkOperator.substring(3);
         }
     }
 
